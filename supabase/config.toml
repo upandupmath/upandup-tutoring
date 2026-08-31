@@ -6,5 +6,11 @@ verify_jwt = false
 [functions.edu-create-package]
 verify_jwt = false
 
-[functions.edu-capture-payment]
+[functions.edu-checkout-status]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.edu-charge-second-payment]
 verify_jwt = false
