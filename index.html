@@ -474,10 +474,10 @@
       </ul>
 
       <div class="promo-row">
-        <input type="text" id="promo-input" placeholder="Discount code">
-        <button onclick="applyPromo()">Apply</button>
+        <input type="text" id="promo-input" aria-label="Discount code" placeholder="Discount code">
+        <button type="button" onclick="applyPromo()">Apply</button>
       </div>
-      <div id="promo-msg"></div>
+      <div id="promo-msg" role="status" aria-live="polite"></div>
 
       <div class="total-line" style="border-top:none;padding-top:0;flex-direction:column;gap:8px;align-items:stretch;">
         <div style="display:flex;justify-content:space-between;font-weight:400;color:var(--muted);font-size:0.92rem;">
@@ -564,19 +564,19 @@
       <p class="lead-muted">Fill this out to get started. After registration, your child will take a placement assessment and we'll build a custom tutoring plan based on the results. Google Meet links will be sent to both the parent and student email addresses.</p>
       <form onsubmit="return submitForm(event)">
         <div>
-          <label>Parent Name</label>
+          <label for="parent-name">Parent Name</label>
           <input type="text" id="parent-name" placeholder="Jane Smith" required>
         </div>
         <div>
-          <label>Parent Email</label>
+          <label for="parent-email">Parent Email</label>
           <input type="email" id="parent-email" placeholder="jane@email.com" required>
         </div>
         <div>
-          <label>Student Email <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.6">(optional)</span></label>
+          <label for="student-email">Student Email <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.6">(optional)</span></label>
           <input type="email" id="student-email" placeholder="student@email.com">
         </div>
         <div>
-          <label>Student's Grade Level</label>
+          <label for="grade-level">Student's Grade Level</label>
           <select id="grade-level" required>
             <option value="">Select grade</option>
             <option value="6">6th Grade</option>
@@ -587,7 +587,7 @@
           </select>
         </div>
         <div>
-          <label>Subject</label>
+          <label for="subject">Subject</label>
           <select id="subject" required>
             <option value="">Select one</option>
             <option>Middle School Math</option>
@@ -598,17 +598,17 @@
           </select>
         </div>
         <div class="full">
-          <label>What is your child working on?</label>
+          <label for="notes">What is your child working on?</label>
           <textarea rows="3" id="notes" placeholder="e.g. struggling with factoring quadratics before next week's test"></textarea>
         </div>
 
         <div class="full" id="calendar-field">
-          <label>Select exactly 4 session times</label>
-          <div class="calendar-widget">
+          <label id="calendar-label">Select exactly 4 session times</label>
+          <div class="calendar-widget" role="group" aria-labelledby="calendar-label">
             <div class="cal-header">
-              <button type="button" class="cal-nav" onclick="changeMonth(-1)">&larr;</button>
+              <button type="button" class="cal-nav" aria-label="Previous month" onclick="changeMonth(-1)">&larr;</button>
               <span id="cal-month-label"></span>
-              <button type="button" class="cal-nav" onclick="changeMonth(1)">&rarr;</button>
+              <button type="button" class="cal-nav" aria-label="Next month" onclick="changeMonth(1)">&rarr;</button>
             </div>
             <div class="cal-grid" id="cal-daynames"></div>
             <div class="cal-grid" id="cal-days"></div>
@@ -618,17 +618,17 @@
         </div>
 
         <div class="full">
-          <label>Your sessions (<span id="session-count">0</span>/4 selected)</label>
-          <div id="session-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <label id="sessions-label">Your sessions (<span id="session-count">0</span>/4 selected)</label>
+          <div id="session-list" role="region" aria-labelledby="sessions-label" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
         <div class="full">
-          <label>Discount code (optional)</label>
+          <label for="form-promo">Discount code (optional)</label>
           <input type="text" id="form-promo" placeholder="Enter code if you have one">
         </div>
 
         <button type="submit" id="submit-btn">Continue to Payment — <span id="pay-now-amount">$130</span> due today</button>
-        <div id="form-msg"></div>
+        <div id="form-msg" role="status" aria-live="polite"></div>
       </form>
     </div>
   </div>
@@ -758,6 +758,7 @@
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d);
       const iso = isoOf(date);
+      const dateLabel = date.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" });
       const dow = date.getDay();
       const isWeekend = (dow === 0 || dow === 6);
       const isPast = date < today;
@@ -787,15 +788,18 @@
             chip.disabled = true;
             chip.textContent = short + "p";
             chip.title = expired ? t + " \u2014 this time has passed" : t + " \u2014 already booked";
+            chip.setAttribute("aria-label", dateLabel + ", " + t + (expired ? ", time has passed" : ", already booked"));
           } else if (inCart) {
             chip.className = "cal-slot added";
             chip.textContent = short + "\u2713";
             chip.title = t + " \u2014 in your cart, tap to remove";
+            chip.setAttribute("aria-label", "Remove " + dateLabel + ", " + t + " from selected sessions");
             chip.addEventListener('click', function(){ removeSlot(iso, t); });
           } else {
             chip.className = "cal-slot";
             chip.textContent = short + "p+";
             chip.title = "Add " + t;
+            chip.setAttribute("aria-label", "Add " + dateLabel + ", " + t + " to selected sessions");
             chip.addEventListener('click', function(){ addSession(iso, t); });
           }
           cell.appendChild(chip);
@@ -861,7 +865,7 @@
       const label = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
       return `<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;font-size:0.9rem;">
         <span>Session ${i+1} — ${label}, ${s.time}</span>
-        <button type="button" onclick="removeSession(${i})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:1rem;">✕</button>
+        <button type="button" aria-label="Remove session ${i+1}: ${label}, ${s.time}" onclick="removeSession(${i})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:1rem;">✕</button>
       </div>`;
     }).join("");
   }

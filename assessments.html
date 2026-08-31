@@ -459,7 +459,7 @@ function passwordScreen(){
     <label class="field" for="pw">Access Code</label>
     <input type="password" id="pw" placeholder="Enter access code">
     <div class="pw-error" id="pw-err"></div>
-    <button class="btn" id="pwBtn">Continue</button>
+    <button type="button" class="btn" id="pwBtn">Continue</button>
   `;
   document.getElementById("pwBtn").addEventListener("click",checkPw);
   document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")checkPw()});
@@ -574,8 +574,8 @@ function questionScreen(){
       <span class="area-tag"><span class="ti">${A.icon}</span>${A.name}</span>
       <span class="qcount">${i+1} / ${qs.length}</span>
     </div>
-    <div class="qtext">${Q.q}</div>
-    <div class="choices" role="group">
+    <div class="qtext" id="question-text">${Q.q}</div>
+    <div class="choices" role="group" aria-labelledby="question-text">
       ${Q.c.map((c,ci)=>`
         <button class="choice ${state.answers[i]===ci?"picked":""}" data-c="${ci}">
           <span class="key">${"ABCD"[ci]}</span><span>${c}</span>
