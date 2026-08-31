@@ -11,7 +11,7 @@ import {
   trustedRedirect,
 } from "../_shared/http.ts";
 import { patch, rpc } from "../_shared/db.ts";
-import { createOrder } from "../_shared/paypal.ts";
+import { createCheckoutSession } from "../_shared/stripe.ts";
 
 const VALID_TIMES = new Set(["16:00", "17:00", "18:00", "19:00"]);
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -54,14 +54,20 @@ function validateSessions(input) {
     unique.add(key);
     return { date, time };
   });
-
   return sessions.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 }
 
-function money(value) {
+function cents(value) {
   const number = Number(value);
   if (!Number.isFinite(number) || number < 0) throw new Error("Invalid configured price");
-  return number.toFixed(2);
+  return Math.round(number * 100);
+}
+
+function successUrl(returnUrl) {
+  const url = new URL(returnUrl);
+  url.searchParams.set("stripe", "return");
+  url.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
+  return url.toString().replace("%7BCHECKOUT_SESSION_ID%7D", "{CHECKOUT_SESSION_ID}");
 }
 
 Deno.serve(async (request) => {
@@ -85,7 +91,7 @@ Deno.serve(async (request) => {
     const cancelUrl = trustedRedirect(input.cancel_url, "Cancel URL");
 
     packageId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000);
     const reserved = await rpc("edu_reserve_package", {
       p_package: {
         id: packageId,
@@ -96,13 +102,12 @@ Deno.serve(async (request) => {
         subject,
         notes,
         discount_code: discountCode,
-        reservation_expires_at: expiresAt,
+        reservation_expires_at: expiresAt.toISOString(),
       },
       p_sessions: sessions,
     });
-
     const row = Array.isArray(reserved) ? reserved[0] : reserved;
-    if (!row || !row.payment1_amount) {
+    if (!row || row.payment1_amount === undefined) {
       throw new Error("Reservation did not return pricing");
     }
 
@@ -111,51 +116,39 @@ Deno.serve(async (request) => {
       return json(request, { mode: "comped", package_id: packageId, payment1_amount: 0 });
     }
 
-    const order = await createOrder({
-      intent: "CAPTURE",
-      purchase_units: [{
-        reference_id: packageId,
-        custom_id: packageId,
-        invoice_id: "edu-" + packageId + "-payment-1",
-        description: "Up and Up tutoring package — sessions 1 and 2",
-        amount: { currency_code: "USD", value: money(row.payment1_amount) },
-      }],
-      payment_source: {
-        paypal: {
-          attributes: {
-            vault: {
-              store_in_vault: "ON_SUCCESS",
-              usage_type: "MERCHANT",
-              customer_type: "CONSUMER",
-            },
-          },
-          experience_context: {
-            brand_name: "Up and Up Educational Services",
-            user_action: "PAY_NOW",
-            shipping_preference: "NO_SHIPPING",
-            return_url: returnUrl,
-            cancel_url: cancelUrl,
-          },
-        },
-      },
-    }, packageId + "-payment-1");
+    const session = await createCheckoutSession([
+      ["mode", "payment"],
+      ["customer_creation", "always"],
+      ["customer_email", parentEmail],
+      ["client_reference_id", packageId],
+      ["success_url", successUrl(returnUrl)],
+      ["cancel_url", cancelUrl],
+      ["expires_at", Math.floor(expiresAt.getTime() / 1000)],
+      ["payment_method_types[0]", "card"],
+      ["metadata[package_id]", packageId],
+      ["payment_intent_data[metadata][package_id]", packageId],
+      ["payment_intent_data[metadata][payment_number]", "1"],
+      ["payment_intent_data[setup_future_usage]", "off_session"],
+      ["line_items[0][price_data][currency]", "usd"],
+      ["line_items[0][price_data][product_data][name]", "Tutoring package — sessions 1 and 2"],
+      ["line_items[0][price_data][unit_amount]", cents(row.payment1_amount)],
+      ["line_items[0][quantity]", "1"],
+      ["custom_text[submit][message]",
+        "By paying, you authorize the remaining package payment to be charged to this card within 3 days before session 3."],
+    ], packageId);
 
-    const approveUrl = Array.isArray(order.links) &&
-      order.links.find((link) => link.rel === "approve" || link.rel === "payer-action");
-    if (!order.id || !approveUrl || !approveUrl.href) {
-      throw new HttpError(502, "PayPal did not return an approval link");
+    if (!session.id || !session.url) {
+      throw new HttpError(502, "Stripe did not return a Checkout URL");
     }
-
     await patch("edu_packages", "id=eq." + encodeURIComponent(packageId), {
-      paypal_order_id: order.id,
+      stripe_checkout_session_id: session.id,
       payment1_status: "pending",
     });
 
     return json(request, {
-      mode: "paypal",
+      mode: "stripe",
       package_id: packageId,
-      order_id: order.id,
-      approveUrl: approveUrl.href,
+      checkoutUrl: session.url,
       payment1_amount: Number(row.payment1_amount),
     }, 201);
   } catch (error) {
@@ -163,8 +156,11 @@ Deno.serve(async (request) => {
       try { await rpc("edu_release_package_reservation", { p_package_id: packageId }); }
       catch (releaseError) { console.error("Reservation release failed", releaseError); }
     }
-    if (error && error.status === 409) {
-      return json(request, { error: "One or more sessions are no longer available", conflicts: true }, 409);
+    if (error && (error.status === 409 || error.code === "23505")) {
+      return json(request, {
+        error: "One or more sessions are no longer available",
+        conflicts: true,
+      }, 409);
     }
     return errorResponse(request, error);
   }
