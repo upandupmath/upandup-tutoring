@@ -1,45 +1,49 @@
-# Supabase backend recovery baseline
+# Stripe/Supabase backend recovery baseline
 
-This folder restores a reviewable source baseline for the booking endpoints named by the live frontend and root README.
+This folder restores a reviewable source baseline and converts the booking design from PayPal to Stripe Checkout.
 
-Important: the original deployed Edge Function source was not present in Git history. Treat this as a recovered candidate, not proof of the exact code currently running in Supabase. Do not deploy it until the migration and environment variables have been compared with the live project.
+The original deployed Edge Function source was not present in Git history. Treat this as a recovered candidate, not proof of the exact code currently running in Supabase. The repository change does not activate Stripe or alter the currently deployed Supabase functions.
 
-## Included in this recovery chunk
+## Flow
 
-- edu-availability: fail-closed availability backed by reservation expiry.
-- edu-create-package: exact four-session validation, atomic slot reservation, server-side pricing, and PayPal order creation.
-- edu-capture-payment: idempotent capture, server-side order/amount/currency verification, durable confirmation, and retryable calendar-sync state.
-- An additive schema baseline with unique live-slot enforcement and service-role-only RPCs.
+1. edu-create-package atomically reserves exactly four slots and creates a hosted Stripe Checkout Session for sessions 1 and 2.
+2. Checkout saves the card for the explicitly disclosed second off-session payment.
+3. stripe-webhook verifies Stripe's signature and is the only path that marks payment complete.
+4. Sessions 1 and 2 become confirmed. Sessions 3 and 4 remain blocked as pending_payment.
+5. edu-charge-second-payment charges the saved card within three days before session 3.
+6. edu-checkout-status lets the browser show durable webhook-confirmed status without trusting URL parameters.
 
-## Required environment variables
+## Required Supabase secrets
 
 - SUPABASE_URL
 - SUPABASE_SERVICE_ROLE_KEY
-- PAYPAL_CLIENT_ID
-- PAYPAL_CLIENT_SECRET
-- PAYPAL_BASE_URL: use only https://api-m.sandbox.paypal.com or https://api-m.paypal.com
-- ALLOWED_ORIGINS: comma-separated browser origins; the GitHub Pages origin is included by default
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- STRIPE_API_VERSION (optional; pin after sandbox verification)
+- CRON_SECRET
+- ALLOWED_ORIGINS
 - CALENDAR_WEBHOOK_URL
 - CALENDAR_WEBHOOK_SECRET
 
-Never put secret values in this repository or browser code.
+Never put secret values or a Stripe secret key in GitHub Pages or this repository.
 
-## Reconciliation checklist before deployment
+## Manual account step that cannot be automated
 
-1. Export the live edu_packages, edu_sessions, and edu_config schemas.
-2. Compare every existing column type and constraint with the migration.
-3. Back up the live tables.
-4. Run the migration in a staging Supabase project first.
-5. Configure sandbox PayPal credentials and the allowed site origin.
-6. Test duplicate-slot races, canceled checkout, repeated capture, wrong order IDs, wrong amounts, calendar failure, and reservation expiry.
-7. Confirm PayPal vault eligibility. A delayed vault can require the VAULT.PAYMENT-TOKEN.CREATED webhook.
-8. Add and test the second-payment worker only after the vault/webhook path is proven.
+The owner must create or connect the Stripe account, complete business verification, and provide test/live secret keys and the webhook signing secret through Supabase's secret manager. Financial-account authorization cannot be performed by the repository code.
 
-## Deliberately not reconstructed yet
+## Before deployment
 
-- edu-charge-second-payment
+1. Export and back up the live edu_packages, edu_sessions, and edu_config schemas.
+2. Compare every live column and type with the migration.
+3. Test the migration and functions in a staging Supabase project.
+4. Use Stripe test mode for success, decline, duplicate webhook, expired Checkout, and off-session authentication-required cases.
+5. Create a Stripe webhook for checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.expired, payment_intent.succeeded, and payment_intent.payment_failed.
+6. Schedule edu-charge-second-payment only after the first-payment webhook and saved-card flow pass.
+7. Confirm the customer-facing terms and authorization language.
+
+## Still requires reconciliation
+
 - edu-save-placement
-- PayPal vault webhooks
+- Current Google Apps Script payload
 - Calendar retry worker
-
-Those pieces depend on the exact live schema, PayPal account eligibility, and current Google Apps Script contract. Guessing them could create real billing or data-loss risk.
+- Failure-alert delivery
