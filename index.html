@@ -259,18 +259,35 @@
   .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.92rem;color:#fff;}
   .cal-nav{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;border-radius:10px;width:30px;height:30px;cursor:pointer;padding:0;font-size:0.9rem;}
   .cal-nav:disabled{opacity:0.3;cursor:not-allowed;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
   #cal-daynames{margin-bottom:8px;font-size:0.68rem;font-weight:600;letter-spacing:0.05em;color:rgba(255,255,255,0.45);text-align:center;text-transform:uppercase;}
   .cal-day{
-    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-    border-radius:10px;font-size:0.85rem;cursor:pointer;color:#fff;
-    background:rgba(255,255,255,0.04);
+    display:flex;flex-direction:column;gap:3px;padding:6px 4px;
+    border-radius:10px;color:#fff;background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.07);
   }
-  .cal-day.blank{visibility:hidden;cursor:default;}
-  .cal-day.disabled{color:rgba(255,255,255,0.2);cursor:not-allowed;background:none;}
-  .cal-day.available:hover{background:rgba(14,159,110,0.28);}
-  .cal-day.selected{background:var(--grad);color:#fff;font-weight:600;}
-  .selected-date-label{margin-top:10px;font-size:0.85rem;font-weight:500;color:var(--teal);min-height:1.2em;}
+  .cal-daynum{font-size:0.74rem;font-weight:600;text-align:center;opacity:.75;margin-bottom:1px;}
+  .cal-day.blank{visibility:hidden;}
+  .cal-day.disabled{background:none;border-color:transparent;}
+  .cal-day.disabled .cal-daynum{color:rgba(255,255,255,0.18);}
+  /* one tappable time chip per slot, printed right on the date */
+  .cal-slot{
+    display:flex;align-items:center;justify-content:center;gap:2px;
+    font-size:0.63rem;font-weight:600;line-height:1;padding:5px 2px;
+    border-radius:6px;border:1px solid rgba(255,255,255,0.16);
+    background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;
+    font-family:'Inter',sans-serif;width:100%;
+  }
+  .cal-slot:hover{background:rgba(14,159,110,0.35);border-color:rgba(14,159,110,0.6);}
+  .cal-slot.added{background:rgba(52,211,153,0.22);border-color:rgba(52,211,153,0.65);color:#6ee7b7;}
+  .cal-slot.added:hover{background:rgba(248,113,113,0.22);border-color:rgba(248,113,113,0.6);color:#fca5a5;}
+  .cal-slot.taken{opacity:.28;cursor:not-allowed;text-decoration:line-through;}
+  .cal-slot.taken:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);}
+  .cal-slot:disabled{cursor:not-allowed;}
+  @media(max-width:560px){
+    .cal-slot{font-size:0.58rem;padding:4px 1px;}
+    .cal-day{padding:5px 3px;}
+  }
 
   footer{padding:40px 0;color:var(--muted);font-size:0.85rem;text-align:center;}
 
@@ -582,7 +599,7 @@
         </div>
 
         <div class="full" id="calendar-field">
-          <label>Pick your session slots (Monday–Friday · 4 minimum)</label>
+          <label>Tap the times you want (4 minimum)</label>
           <div class="calendar-widget">
             <div class="cal-header">
               <button type="button" class="cal-nav" onclick="changeMonth(-1)">&larr;</button>
@@ -592,11 +609,7 @@
             <div class="cal-grid" id="cal-daynames"></div>
             <div class="cal-grid" id="cal-days"></div>
           </div>
-          <div id="selected-date-label" class="selected-date-label"></div>
-        </div>
-
-        <div class="full">
-          <div id="slot-panel" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <p style="margin:10px 0 0;font-size:.76rem;opacity:.6;">Tap a time to add it. Tap again to remove.</p>
         </div>
 
         <div class="full">
@@ -634,7 +647,6 @@
 
   let bookedSlots = new Set();      // "YYYY-MM-DD|time"
   let chosenSessions = [];          // [{date, time}]
-  let activeDate = null;
 
   async function loadAvailability(){
     try {
@@ -666,7 +678,8 @@
   const _horizon = new Date(today.getFullYear(), today.getMonth() + BOOKING_HORIZON_MONTHS, 1);
   const MAX_MONTH_INDEX = _horizon.getFullYear() * 12 + _horizon.getMonth();
 
-  const dayNames = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+  const dayNames = ["Mon","Tue","Wed","Thu","Fri"];
+  const SLOT_LABELS = { "4:00\u20135:00 PM": "4p", "5:00\u20136:00 PM": "5p", "6:00\u20137:00 PM": "6p" };
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
   function isoOf(date){
@@ -682,32 +695,59 @@
     const grid = document.getElementById('cal-days');
     grid.innerHTML = "";
 
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-    for(let i=0;i<firstDay;i++){
+    // Weekday-only grid (Mon-Fri): column index 0..4
+    const firstDow = new Date(viewYear, viewMonth, 1).getDay();     // 0=Sun
+    let leading = firstDow === 0 ? 0 : (firstDow === 6 ? 0 : firstDow - 1);
+    for (let i = 0; i < leading; i++) {
       const blank = document.createElement('div');
       blank.className = "cal-day blank";
       grid.appendChild(blank);
     }
 
-    for(let d=1; d<=daysInMonth; d++){
+    for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d);
-      const iso = isoOf(date);
       const dow = date.getDay();
-      const isWeekend = (dow === 0 || dow === 6);
-      const isPast = date < today;
-      const fullyBooked = slotTakenCount(iso) >= VALID_TIMES.length;
-      const cell = document.createElement('div');
-      cell.textContent = d;
+      if (dow === 0 || dow === 6) continue;          // skip weekends entirely
 
-      if(isWeekend || isPast || fullyBooked){
-        cell.className = "cal-day disabled";
-        if (fullyBooked && !isWeekend && !isPast) cell.title = "Fully booked";
-      } else {
-        cell.className = "cal-day available" + (activeDate === iso ? " selected" : "");
-        cell.onclick = () => selectDate(iso, cell);
-      }
+      const iso = isoOf(date);
+      const isPast = date < today;
+
+      const cell = document.createElement('div');
+      cell.className = "cal-day" + (isPast ? " disabled" : "");
+
+      const num = document.createElement('div');
+      num.className = "cal-daynum";
+      num.textContent = d;
+      cell.appendChild(num);
+
+      VALID_TIMES.forEach(function(t){
+        const chip = document.createElement('button');
+        chip.type = "button";
+        const short = SLOT_LABELS[t] || t;
+        const booked = bookedSlots.has(iso + "|" + t);
+        const inCart = chosenSessions.some(function(x){ return x.date === iso && x.time === t; });
+
+        if (isPast || booked) {
+          chip.className = "cal-slot taken";
+          chip.disabled = true;
+          chip.textContent = short;
+          chip.title = booked ? "Already booked" : "Date has passed";
+        } else if (inCart) {
+          chip.className = "cal-slot added";
+          chip.textContent = short + " \u2713";
+          chip.title = "In your cart \u2014 tap to remove";
+          chip.addEventListener('click', function(){ removeSlot(iso, t); });
+        } else {
+          chip.className = "cal-slot";
+          chip.textContent = short + " +";
+          chip.title = t;
+          chip.addEventListener('click', function(){ addSession(iso, t); });
+        }
+        cell.appendChild(chip);
+      });
+
       grid.appendChild(cell);
     }
 
@@ -723,54 +763,9 @@
     renderCalendar();
   }
 
-  function selectDate(iso, cell){
-    activeDate = iso;
-    document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
-    cell.classList.add('selected');
-    const d = new Date(iso + "T12:00:00");
-    const label = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-    document.getElementById('selected-date-label').textContent = "Selected: " + label;
-    renderSlotPanel();
-  }
-
-  /* Time slots shown inline under the calendar, each with its own + button. */
-  function renderSlotPanel(){
-    const panel = document.getElementById('slot-panel');
-    if (!activeDate) {
-      panel.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:0.88rem;">Pick a date above to see open times.</div>';
-      return;
-    }
-    panel.innerHTML = VALID_TIMES.map(function(t){
-      const isBooked = bookedSlots.has(activeDate + "|" + t);
-      const inCart   = chosenSessions.some(function(s){ return s.date === activeDate && s.time === t; });
-      const full     = chosenSessions.length >= MAX_SESSIONS;
-      const label    = t.replace("\u2013", " \u2013 ");
-
-      let right, style, handler = "";
-      if (isBooked) {
-        right = '<span style="font-size:.82rem;opacity:.5;">Booked</span>';
-        style = "opacity:.45;";
-      } else if (inCart) {
-        right = '<span style="font-size:.82rem;color:#34d399;font-weight:600;">\u2713 Added</span>';
-        style = "border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.08);";
-      } else if (full) {
-        right = '<span style="font-size:.82rem;opacity:.5;">Cart full</span>';
-        style = "opacity:.45;";
-      } else {
-        right = '<span style="font-size:1.35rem;line-height:1;font-weight:600;">+</span>';
-        style = "cursor:pointer;";
-        handler = ' data-add="' + t + '"';
-      }
-
-      return '<div' + handler + ' style="display:flex;justify-content:space-between;align-items:center;' +
-        'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);' +
-        'border-radius:10px;padding:13px 16px;font-size:0.92rem;' + style + '">' +
-        '<span>' + label + '</span>' + right + '</div>';
-    }).join("");
-
-    panel.querySelectorAll('[data-add]').forEach(function(el){
-      el.addEventListener('click', function(){ addSession(activeDate, el.getAttribute('data-add')); });
-    });
+  function removeSlot(iso, time){
+    const i = chosenSessions.findIndex(function(x){ return x.date === iso && x.time === time; });
+    if (i >= 0) removeSession(i);
   }
 
   /* ---------- Session list ---------- */
@@ -795,7 +790,6 @@
   function refreshAll(){
     renderSessionList();
     renderCalendar();
-    renderSlotPanel();
     refreshPricing();
   }
 
@@ -1001,7 +995,6 @@
   renderDayNames();
   renderCalendar();
   renderSessionList();
-  renderSlotPanel();
   refreshPricing();
   loadAvailability();
   handlePayPalReturn();
