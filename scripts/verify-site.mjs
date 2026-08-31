@@ -172,9 +172,15 @@ const assessments = read("assessments.html");
 assertContains(assessments, "function escapeHtml", "assessment result names are escaped");
 assertContains(assessments, "30-question", "assessment question count is displayed accurately");
 assertNotContains(assessments, "${state.name}", "assessment results do not interpolate an unescaped student name");
+assertNotContains(assessments, "const PASS =", "assessment access code is absent from public source");
+assertNotContains(assessments, "script.google.com/macros", "assessment report endpoint is absent from public source");
+assertContains(assessments, "ASSESSMENT_API_URL", "assessment access is delegated to the backend");
+assertContains(assessments, "assessmentToken", "assessment reports require a scoped session token");
 
-if (assessments.includes('const PASS = "UpAndUp2026";')) {
-  warn("assessments.html still uses the known static access-code gate; backend authentication is the next security chunk");
+if (!fs.existsSync(path.join(ROOT, "supabase/functions/edu-assessment-auth/index.ts"))) {
+  fail("assessment authentication function source is missing");
+} else {
+  pass("assessment authentication function source is present");
 }
 
 console.log("");
