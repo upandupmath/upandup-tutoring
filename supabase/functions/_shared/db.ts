@@ -23,6 +23,9 @@ export async function db(path, init = {}) {
   }
   if (!response.ok) {
     console.error("Database request failed", response.status, body);
+    if (body && body.code === "23505") {
+      throw new HttpError(409, "One or more sessions are no longer available", { conflicts: true });
+    }
     throw new HttpError(500, "Database operation failed");
   }
   return body;
