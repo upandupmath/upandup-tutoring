@@ -153,6 +153,18 @@ for (const file of HTML_FILES) {
 
 checkForSecrets();
 
+const readme = read("README.md");
+assertNotContains(
+  readme,
+  "folder in this repo is a **reference copy** of the deployed code",
+  "README does not claim missing backend source is versioned"
+);
+assertContains(readme, "docs/production-recovery.md", "README links the production recovery runbook");
+
+const gitignore = read(".gitignore");
+assertContains(gitignore, ".env.*", "local environment files are ignored");
+assertContains(gitignore, "data.sql", "production data dump output is ignored");
+
 const index = read("index.html");
 assertContains(index, "const MAX_SESSIONS = 4;", "booking remains capped at four sessions");
 assertNotContains(index, "MAX_SESSIONS = 12", "legacy 12-session limit is absent");
