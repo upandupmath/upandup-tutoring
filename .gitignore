@@ -1,0 +1,21 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+
+# Supabase CLI local state
+.supabase/
+supabase/.temp/
+
+# Production recovery output (never commit family/student data)
+.backups/
+backups/
+roles.sql
+schema.sql
+data.sql
+*.dump
+*.backup
+
+# Editor and operating-system noise
+.DS_Store
+Thumbs.db
