@@ -154,7 +154,15 @@ input:focus{outline:3px solid rgba(14,159,110,.35);border-color:var(--accent)}
 </div>
 
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMHiWO6YQmPQdlq2f9_YHSS-FWY-aKPbxitJcKrUS1_KXXFwjv37FI6c3fpqsfpOEI4Q/exec";
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,ch=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[ch]);
+}
+
+function validEmail(value){
+  return value.length<=254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
 
 const BANKS = {
 6:{
@@ -431,7 +439,7 @@ const BANKS = {
 
 /* ===================== STATE ===================== */
 let grade = null;
-let regData = {parentName:"",parentEmail:"",studentEmail:"",studentGrade:""};
+let regData = {parentName:"",parentEmail:"",studentEmail:"",studentGrade:"",consentedAt:""};
 let state = {name:"",idx:0,answers:[],phase:"start"};
 let timerInterval = null;
 let timerStart = null;
@@ -464,22 +472,22 @@ function registrationScreen(){
     <p class="lede">Our placement test identifies exactly where your child is strong and where they need support — so tutoring starts in the right place from day one. It takes about 30 minutes, covers 30 questions, and results are delivered instantly with a recommended tutoring plan.</p>
     <div class="skill-chips">
       <span class="skill-chip"><span class="icon" style="font-size:10px">30</span>Questions</span>
-      <span class="skill-chip"><span class="icon">90</span>Minutes</span>
+      <span class="skill-chip"><span class="icon">30</span>Minutes</span>
       <span class="skill-chip"><span class="icon">📊</span>Instant Results</span>
       <span class="skill-chip"><span class="icon">📋</span>Custom Plan</span>
     </div>
     <div class="reg-form">
       <div>
         <label>Parent / Guardian Name</label>
-        <input type="text" id="reg-parent" placeholder="Jane Smith" required>
+        <input type="text" id="reg-parent" maxlength="120" autocomplete="name" placeholder="Jane Smith" required>
       </div>
       <div>
         <label>Parent Email</label>
-        <input type="email" id="reg-email" placeholder="jane@email.com" required>
+        <input type="email" id="reg-email" maxlength="254" autocomplete="email" placeholder="jane@email.com" required>
       </div>
       <div>
         <label>Student First Name</label>
-        <input type="text" id="reg-student" placeholder="Marcus" required>
+        <input type="text" id="reg-student" maxlength="80" autocomplete="off" placeholder="Marcus" required>
       </div>
       <div>
         <label>Student's Current Grade</label>
@@ -494,12 +502,20 @@ function registrationScreen(){
       </div>
       <div>
         <label>Student Email <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.6">(optional)</span></label>
-        <input type="email" id="reg-student-email" placeholder="student@email.com">
+        <input type="email" id="reg-student-email" maxlength="254" autocomplete="email" placeholder="student@email.com">
       </div>
-      <div style="display:flex;align-items:flex-end;">
+      <div class="full" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
+        <label for="reg-website">Website</label>
+        <input type="text" id="reg-website" tabindex="-1" autocomplete="off">
+      </div>
+      <label class="full" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;line-height:1.45;">
+        <input type="checkbox" id="reg-consent" required style="width:auto;padding:0;margin-top:3px;accent-color:var(--accent);">
+        <span>I am the parent/guardian or an authorized adult, and I consent to submitting this student's name, grade, and assessment results to Up and Up Educational Services for tutoring and follow-up. This information is not submitted for advertising.</span>
+      </label>
+      <div class="full" style="display:flex;align-items:flex-end;">
         <button class="btn" id="reg-btn" style="width:100%">Start the Free Placement Test &rarr;</button>
       </div>
-      <div class="reg-err" id="reg-err"></div>
+      <div class="reg-err full" id="reg-err" role="alert" aria-live="polite"></div>
     </div>
   `;
   document.getElementById("reg-btn").addEventListener("click", handleRegistration);
@@ -513,38 +529,29 @@ async function handleRegistration(){
   const studentEmail = document.getElementById("reg-student-email").value.trim();
   const err = document.getElementById("reg-err");
 
+  if(document.getElementById("reg-website").value){ return; }
   if(!parentName){ err.textContent="Please enter a parent/guardian name."; return; }
-  if(!parentEmail){ err.textContent="Please enter a parent email."; return; }
+  if(!validEmail(parentEmail)){ err.textContent="Please enter a valid parent email."; return; }
   if(!studentName){ err.textContent="Please enter the student's first name."; return; }
+  if(studentEmail && !validEmail(studentEmail)){ err.textContent="Please enter a valid student email or leave it blank."; return; }
   if(!studentGrade){ err.textContent="Please select the student's current grade."; return; }
+  if(!document.getElementById("reg-consent").checked){ err.textContent="Parent/guardian consent is required before starting."; return; }
 
-  regData = {parentName, parentEmail, studentEmail, studentGrade};
+  const consentedAt = new Date().toISOString();
+  regData = {
+    parentName: parentName.slice(0,120),
+    parentEmail: parentEmail.toLowerCase(),
+    studentEmail: studentEmail ? studentEmail.toLowerCase() : "",
+    studentGrade,
+    consentedAt
+  };
   grade = parseInt(studentGrade);
-  state = {name:studentName, idx:0, answers:new Array(BANKS[grade].questions.length).fill(null), phase:"start"};
+  state = {name:studentName.slice(0,80), idx:0, answers:new Array(BANKS[grade].questions.length).fill(null), phase:"start"};
 
-  // Send registration to Brother Truth
   err.textContent = "";
   const btn = document.getElementById("reg-btn");
   btn.disabled = true;
   btn.textContent = "Loading assessment...";
-
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body: JSON.stringify({
-        action: "placementRegistration",
-        parentName,
-        parentEmail,
-        studentName,
-        studentEmail,
-        studentGrade: grade,
-        assessmentLevel: grade + "th Grade Readiness",
-        timestamp: new Date().toLocaleString("en-US")
-      })
-    });
-  } catch(e) { console.error("Registration email failed:", e); }
 
   timerStart = new Date();
   timerEnd = null;
@@ -735,13 +742,17 @@ function resultsScreen(){
     started_at: timerStart ? timerStart.toISOString() : null,
     completed_at: timerEnd ? timerEnd.toISOString() : null,
     duration_seconds: getElapsedSeconds(),
+    consented_at: regData.consentedAt,
+    consent_version: "placement-results-v1",
     report_text: emailLines.join("\n")
   });
 
+  const safeStudentName=escapeHtml(state.name);
+  const safeParentName=escapeHtml(regData.parentName);
   screen.innerHTML=`
-    <div class="print-head"><h2>Up And Up Educational Services — ${B.title}</h2><p>Student: ${state.name} · Date: ${today} · Parent: ${regData.parentName}</p></div>
+    <div class="print-head"><h2>Up And Up Educational Services — ${B.title}</h2><p>Student: ${safeStudentName} · Date: ${today} · Parent: ${safeParentName}</p></div>
     <div class="score-hero">
-      <div class="kicker">${state.name}'s Results · ${grade}th Grade Readiness · ${today}</div>
+      <div class="kicker">${safeStudentName}'s Results · ${grade}th Grade Readiness · ${today}</div>
       <div class="big">${total} / ${qs.length}</div>
       <div class="of">${pct}% correct</div>
       <div style="font-size:.82rem;color:var(--muted);margin-top:8px">Started: ${startStamp} · Completed: ${endStamp} · Duration: ${duration}</div><br>
@@ -770,7 +781,7 @@ function resultsScreen(){
 
     <div class="plan"><h3>Next Steps</h3><p>${detail}</p><ul class="next-steps">${nextSteps.map(s=>`<li>${s}</li>`).join("")}</ul></div>
 
-    <div id="email-status" style="text-align:center;font-size:.85rem;font-weight:600;color:var(--teal);margin-top:16px;min-height:1.4em" class="no-print"></div>
+    <div id="email-status" role="status" aria-live="polite" style="text-align:center;font-size:.85rem;font-weight:600;color:var(--teal);margin-top:16px;min-height:1.4em" class="no-print"></div>
 
     <div class="resultbtns no-print">
       <button class="btn" id="printBtn">Print / Save Report</button>
