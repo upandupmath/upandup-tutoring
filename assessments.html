@@ -140,8 +140,14 @@ input:focus{outline:3px solid rgba(14,159,110,.35);border-color:var(--accent)}
 </div>
 
 <script>
-/* ===================== PASSWORD ===================== */
+/* Casual access gate only. Static-page source is not a secure item bank. */
 const PASS = "UpAndUp2026";
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,ch=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[ch]);
+}
 
 /* ===================== QUESTION BANKS ===================== */
 const BANKS = {
@@ -495,19 +501,19 @@ function startScreen(){
   screen.innerHTML=`
     <div class="kicker">${B.subtitle}</div>
     <div class="display">Let's find your child's <em>starting point.</em></div>
-    <p class="lede">This 25-question assessment covers the key skill areas from ${B.tests}. It identifies exactly where your child is strong and where tutoring time should focus. Take your time.</p>
+    <p class="lede">This 30-question assessment covers the key skill areas from ${B.tests}. It identifies exactly where your child is strong and where tutoring time should focus. Take your time.</p>
     <div class="skill-chips">
       ${B.areas.map(a=>`<span class="skill-chip"><span class="icon">${a.icon}</span>${a.name}</span>`).join("")}
     </div>
     <label class="field" for="nm">Student first name</label>
-    <input type="text" id="nm" autocomplete="off" placeholder="Enter name" value="${state.name.replace(/"/g,"&quot;")}">
+    <input type="text" id="nm" autocomplete="off" maxlength="80" placeholder="Enter name" value="${escapeHtml(state.name)}">
     <div style="display:flex;gap:12px;flex-wrap:wrap">
       <button class="btn" id="startBtn">Start Assessment</button>
       <button class="btn ghost" id="backToGrades">&larr; Change Grade</button>
     </div>
   `;
   document.getElementById("startBtn").addEventListener("click",()=>{
-    state.name=document.getElementById("nm").value.trim()||"Student";
+    state.name=(document.getElementById("nm").value.trim()||"Student").slice(0,80);
     state.idx=0;
     timerStart=new Date();
     timerEnd=null;
@@ -676,10 +682,11 @@ function resultsScreen(){
   // Send report to Brother Truth's email via Apps Script
   sendReportEmail(state.name, grade, pct, verdict, emailLines.join("\n"));
 
+  const safeStudentName=escapeHtml(state.name);
   screen.innerHTML=`
-    <div class="print-head"><h2>Up and Up Educational Services — ${B.title}</h2><p>Student: ${state.name} · Date: ${today}</p></div>
+    <div class="print-head"><h2>Up and Up Educational Services — ${B.title}</h2><p>Student: ${safeStudentName} · Date: ${today}</p></div>
     <div class="score-hero">
-      <div class="kicker">${state.name}'s Results · ${grade}th Grade Readiness · ${today}</div>
+      <div class="kicker">${safeStudentName}'s Results · ${grade}th Grade Readiness · ${today}</div>
       <div class="big">${total} / ${qs.length}</div>
       <div class="of">${pct}% correct</div>
       <div style="font-size:.82rem;color:var(--muted);margin-top:8px">Started: ${startStamp} · Completed: ${endStamp} · Duration: ${duration}</div><br>
@@ -708,7 +715,7 @@ function resultsScreen(){
 
     <div class="plan"><h3>Next Steps</h3><p>${detail}</p><ul class="next-steps">${nextSteps.map(s=>`<li>${s}</li>`).join("")}</ul></div>
 
-    <div id="email-status" style="text-align:center;font-size:.85rem;font-weight:600;color:var(--teal);margin-top:16px;min-height:1.4em" class="no-print"></div>
+    <div id="email-status" role="status" aria-live="polite" style="text-align:center;font-size:.85rem;font-weight:600;color:var(--teal);margin-top:16px;min-height:1.4em" class="no-print"></div>
 
     <div class="resultbtns no-print">
       <button class="btn" id="printBtn">Print / Save Report</button>
@@ -725,25 +732,31 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMHiWO6YQmPQdl
 
 async function sendReportEmail(studentName, gradeLevel, pct, verdict, reportText){
   const statusEl = document.getElementById("email-status");
-  if(statusEl) statusEl.textContent = "Sending report to Brother Truth...";
+  if(statusEl) statusEl.textContent = "Submitting report for delivery...";
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(),10000);
   try {
-    const resp = await fetch(APPS_SCRIPT_URL, {
+    await fetch(APPS_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
+      referrerPolicy: "no-referrer",
+      signal: controller.signal,
       headers: {"Content-Type": "text/plain;charset=utf-8"},
       body: JSON.stringify({
         action: "assessmentReport",
-        studentName: studentName,
+        studentName: studentName.slice(0,80),
         gradeLevel: gradeLevel,
         score: pct,
         verdict: verdict,
-        report: reportText
+        report: reportText.slice(0,20000)
       })
     });
-    if(statusEl) statusEl.textContent = "✓ Report sent to Brother Truth";
+    if(statusEl) statusEl.textContent = "Report submitted for delivery";
   } catch(e){
-    console.error("Email send failed:", e);
-    if(statusEl) statusEl.textContent = "";
+    console.error("Report submission failed:", e);
+    if(statusEl) statusEl.textContent = "Report delivery could not be confirmed — please save or print this page.";
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
