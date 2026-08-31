@@ -456,7 +456,7 @@
   <div class="container">
     <div class="section-label">Pricing</div>
     <h2>Simple, one-rate pricing.</h2>
-    <p class="lead-muted">No tiers to compare. Book 4 sessions or more, and pay two at a time as you go — never more than two sessions in advance. Handled through PayPal, and we accept all major credit cards.</p>
+    <p class="lead-muted">No tiers to compare. Book one four-session package and pay two sessions at a time — never more than two sessions in advance. Handled through PayPal, and we accept all major credit cards.</p>
 
     <div class="pricing-card">
       <div class="price-row">
@@ -465,7 +465,7 @@
         <span class="price-was" id="was-price" style="display:none;">$65</span>
       </div>
       <ul>
-        <li>4-session minimum — add as many as you need, up to 12</li>
+        <li>Four-session package — select exactly four session times</li>
         <li>60-minute 1-on-1 sessions, 100% virtual on Google Meet</li>
         <li>Monday–Friday, 4:00–7:00 PM — calendar booking synced automatically</li>
         <li>Grades 6–10 · middle school math through Geometry</li>
@@ -505,7 +505,7 @@
     <div class="policy-grid">
       <div class="policy-card">
         <h3>The 4-session minimum &amp; how billing works</h3>
-        <p>Every sign-up commits to at least 4 sessions — enough runway to actually make progress on a topic, even if it started as "just one section of homework." You are never asked to pay for all of them up front. You pay $130 for your first two sessions when you book, and another $130 after every two sessions from there. A package ending on an odd session finishes with a single $65 payment. If your child stops partway through, you have paid only for the sessions already reserved and delivered.</p>
+        <p>Every sign-up books exactly four sessions — enough runway to make meaningful progress without paying for the full package up front. You pay $130 for sessions 1 and 2 when you book. The remaining $130 covers sessions 3 and 4 and is charged according to the payment authorization completed through PayPal.</p>
       </div>
       <div class="policy-card">
         <h3>Rescheduling</h3>
@@ -537,7 +537,7 @@
     </details>
     <details>
       <summary>How does payment work?</summary>
-      <p>You pay as you go, two sessions at a time. $130 covers sessions 1 and 2 and is paid when you book. After session 2, the next $130 is charged for sessions 3 and 4 — and so on through your package. If you booked an odd number, the last payment is $65 for the final session. You can pay by card (charged automatically to the card you used at booking) or ask to be invoiced instead, with 14 days to pay. Handled through PayPal; Visa, Mastercard, Amex and Discover accepted, no PayPal account required.</p>
+      <p>The four-session package is paid in two parts. $130 covers sessions 1 and 2 and is paid when you book. The remaining $130 covers sessions 3 and 4 and is charged using the payment authorization completed through PayPal. Visa, Mastercard, Amex and Discover are accepted; no PayPal account is required.</p>
     </details>
     <details>
       <summary>How do we join the Google Meet?</summary>
@@ -603,7 +603,7 @@
         </div>
 
         <div class="full" id="calendar-field">
-          <label>Tap the times you want (4 minimum)</label>
+          <label>Select exactly 4 session times</label>
           <div class="calendar-widget">
             <div class="cal-header">
               <button type="button" class="cal-nav" onclick="changeMonth(-1)">&larr;</button>
@@ -613,11 +613,12 @@
             <div class="cal-grid" id="cal-daynames"></div>
             <div class="cal-grid" id="cal-days"></div>
           </div>
-          <p style="margin:10px 0 0;font-size:.76rem;opacity:.6;">Tap a time to add it. Tap again to remove.</p>
+          <p style="margin:10px 0 0;font-size:.76rem;opacity:.6;">All times are Eastern. Tap a time to add it; tap again to remove it.</p>
+          <div id="availability-status" role="status" aria-live="polite" style="margin-top:8px;font-size:.8rem;color:var(--teal);">Loading availability…</div>
         </div>
 
         <div class="full">
-          <label>Your cart (<span id="session-count">0</span> selected · 4 minimum)</label>
+          <label>Your sessions (<span id="session-count">0</span>/4 selected)</label>
           <div id="session-list" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
@@ -627,8 +628,6 @@
         </div>
 
         <button type="submit" id="submit-btn">Continue to Payment — <span id="pay-now-amount">$130</span> due today</button>
-        <button type="button" id="invoice-btn" style="margin-top:10px;width:100%;background:transparent;border:1.5px solid var(--line);color:inherit;padding:14px;border-radius:12px;font-weight:600;cursor:pointer;font-size:.95rem;">Invoice me instead — 14 days to pay</button>
-        <p style="margin:8px 0 0;font-size:.78rem;opacity:.7;text-align:center;">Your slots are held. You'll be invoiced $130 at a time, 14 days to pay.</p>
         <div id="form-msg"></div>
       </form>
     </div>
@@ -647,21 +646,67 @@
   const VALID_TIMES = ["4:00–5:00 PM", "5:00–6:00 PM", "6:00–7:00 PM"];
   const BOOKING_HORIZON_MONTHS = 6;   // how far ahead parents may book
   const MIN_SESSIONS = 4;
-  const MAX_SESSIONS = 12;
+  const MAX_SESSIONS = 4;
 
   let bookedSlots = new Set();      // "YYYY-MM-DD|time"
   let chosenSessions = [];          // [{date, time}]
+  let availabilityLoaded = false;
+
+  function setAvailabilityStatus(message, isError){
+    const status = document.getElementById("availability-status");
+    if (!status) return;
+    status.textContent = message;
+    status.style.color = isError ? "#fca5a5" : "var(--teal)";
+  }
+
+  function easternNowParts(){
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+    }).formatToParts(new Date());
+    const values = {};
+    parts.forEach(part => { if (part.type !== "literal") values[part.type] = part.value; });
+    return {
+      date: values.year + "-" + values.month + "-" + values.day,
+      hour: Number(values.hour),
+      minute: Number(values.minute)
+    };
+  }
+
+  function slotHasStarted(iso, time){
+    const now = easternNowParts();
+    if (iso < now.date) return true;
+    if (iso > now.date) return false;
+    const match = time.match(/^(\d+):/);
+    if (!match) return true;
+    const startHour = Number(match[1]) + 12;
+    return now.hour > startHour || (now.hour === startHour && now.minute >= 0);
+  }
 
   async function loadAvailability(){
+    availabilityLoaded = false;
+    setAvailabilityStatus("Loading availability…", false);
+    renderCalendar();
     try {
-      const from = new Date().toISOString().slice(0,10);
-      const to = new Date(); to.setMonth(to.getMonth() + BOOKING_HORIZON_MONTHS);
-      const toIso = to.toISOString().slice(0,10);
+      const from = isoOf(today);
+      const to = new Date(today); to.setMonth(to.getMonth() + BOOKING_HORIZON_MONTHS);
+      const toIso = isoOf(to);
       const res = await fetch(`${API_BASE}/edu-availability?from=${from}&to=${toIso}`);
+      if (!res.ok) throw new Error("Availability request failed with status " + res.status);
       const data = await res.json();
-      bookedSlots = new Set((data.booked || []).map(b => b.session_date + "|" + b.session_time));
+      if (!Array.isArray(data.booked)) throw new Error("Availability response was invalid");
+      bookedSlots = new Set(data.booked.map(b => b.session_date + "|" + b.session_time));
+      availabilityLoaded = true;
+      setAvailabilityStatus("", false);
       renderCalendar();
-    } catch(e){ console.error("availability load failed", e); }
+    } catch(e){
+      console.error("availability load failed", e);
+      bookedSlots = new Set();
+      availabilityLoaded = false;
+      setAvailabilityStatus("Booking is temporarily unavailable because live availability could not be confirmed. Please refresh and try again.", true);
+      renderCalendar();
+    }
   }
 
   function slotTakenCount(iso){
@@ -673,7 +718,9 @@
   }
 
   /* ---------- Calendar ---------- */
-  const today = new Date();
+  const initialEasternNow = easternNowParts();
+  const [todayYear, todayMonth, todayDay] = initialEasternNow.date.split("-").map(Number);
+  const today = new Date(todayYear, todayMonth - 1, todayDay);
   today.setHours(0,0,0,0);
   let viewYear = today.getFullYear();
   let viewMonth = today.getMonth();
@@ -714,7 +761,8 @@
       const dow = date.getDay();
       const isWeekend = (dow === 0 || dow === 6);
       const isPast = date < today;
-      const bookable = !isWeekend && !isPast;
+      const hasFutureSlot = VALID_TIMES.some(t => !slotHasStarted(iso, t));
+      const bookable = availabilityLoaded && !isWeekend && !isPast && hasFutureSlot;
 
       const cell = document.createElement('div');
       cell.className = "cal-day" + (bookable ? "" : " disabled noslots");
@@ -731,13 +779,14 @@
           chip.type = "button";
           const short = SLOT_LABELS[t] || t;
           const booked = bookedSlots.has(iso + "|" + t);
+          const expired = slotHasStarted(iso, t);
           const inCart = chosenSessions.some(function(x){ return x.date === iso && x.time === t; });
 
-          if (booked) {
+          if (booked || expired) {
             chip.className = "cal-slot taken";
             chip.disabled = true;
             chip.textContent = short + "p";
-            chip.title = t + " \u2014 already booked";
+            chip.title = expired ? t + " \u2014 this time has passed" : t + " \u2014 already booked";
           } else if (inCart) {
             chip.className = "cal-slot added";
             chip.textContent = short + "\u2713";
@@ -778,7 +827,9 @@
     const msg = document.getElementById('form-msg');
     msg.textContent = "";
     if (!date || !time) return;
-    if (chosenSessions.length >= MAX_SESSIONS) { msg.textContent = "That's the maximum of " + MAX_SESSIONS + " sessions per booking."; return; }
+    if (!availabilityLoaded) { msg.textContent = "Live availability could not be confirmed. Please refresh and try again."; return; }
+    if (slotHasStarted(date, time)) { msg.textContent = "That session time has already passed."; return; }
+    if (chosenSessions.length >= MAX_SESSIONS) { msg.textContent = "You have selected all 4 sessions. Remove one before choosing another."; return; }
     if (bookedSlots.has(date + "|" + time)) { msg.textContent = "That slot is already booked."; return; }
     if (chosenSessions.some(s => s.date === date && s.time === time)) return;
 
@@ -823,9 +874,9 @@
 
   let currentPerSession = SESSION_PRICE;
 
-  /* Billed on the number of sessions in the cart, minimum 4. */
+  /* The deployed backend currently supports one four-session package. */
   function billableCount(){
-    return Math.max(chosenSessions.length, MIN_SESSIONS);
+    return MIN_SESSIONS;
   }
 
   function setAmounts(perSession){
@@ -876,25 +927,28 @@
   }
 
   /* ---------- Submit → create package → PayPal ---------- */
-  async function submitForm(e, paymentMethod){
+  async function submitForm(e){
     if (e && e.preventDefault) e.preventDefault();
-    paymentMethod = paymentMethod || "paypal";
     const msg = document.getElementById('form-msg');
     const btn = document.getElementById('submit-btn');
     msg.textContent = "";
 
-    if (chosenSessions.length < MIN_SESSIONS) {
-      msg.textContent = `Please add at least ${MIN_SESSIONS} sessions (${chosenSessions.length} in your cart).`;
+    if (!availabilityLoaded) {
+      msg.textContent = "Live availability could not be confirmed. Please refresh and try again.";
       return false;
     }
-    if (chosenSessions.length > MAX_SESSIONS) {
-      msg.textContent = `Maximum ${MAX_SESSIONS} sessions per booking.`;
+    if (chosenSessions.length !== MIN_SESSIONS) {
+      msg.textContent = `Please select exactly ${MIN_SESSIONS} sessions (${chosenSessions.length}/${MIN_SESSIONS} selected).`;
+      return false;
+    }
+    if (chosenSessions.some(s => slotHasStarted(s.date, s.time))) {
+      msg.textContent = "One of your selected session times has already passed. Please choose another time.";
+      refreshAll();
       return false;
     }
 
     btn.disabled = true;
-    document.getElementById('invoice-btn').disabled = true;
-    btn.textContent = paymentMethod === "invoice" ? "Preparing your invoice…" : "Setting up your booking…";
+    btn.textContent = "Setting up your booking…";
 
     const pageUrl = window.location.origin + window.location.pathname;
 
@@ -905,11 +959,12 @@
         body: JSON.stringify({
           parent_name: document.getElementById('parent-name').value,
           parent_email: document.getElementById('parent-email').value,
+          student_email: document.getElementById('student-email').value || null,
           student_grade: document.getElementById('grade-level').value,
           subject: document.getElementById('subject').value,
           notes: document.getElementById('notes').value,
           discount_code: document.getElementById('form-promo').value,
-          payment_method: paymentMethod,
+          payment_method: "paypal",
           sessions: chosenSessions,
           return_url: pageUrl + "?paypal=return",
           cancel_url: pageUrl + "?paypal=cancel",
@@ -925,23 +980,14 @@
           msg.textContent = data.error || "Something went wrong. Please try again.";
         }
         btn.disabled = false;
-        document.getElementById('invoice-btn').disabled = false;
         btn.innerHTML = 'Continue to Payment — <span id="pay-now-amount">$' + (data.payment1_amount ?? 130) + '</span> due today';
         return false;
       }
 
-      if (data.mode === "invoice") {
-        msg.className = "ok";
-        msg.textContent = "Booked. Your invoice for $" + Number(data.total_amount).toFixed(2) +
-          " is due " + data.invoice_due_date + ". Your 4 slots are held.";
-        btn.style.display = "none";
-        document.getElementById('invoice-btn').style.display = "none";
-        await loadAvailability();
-      } else if (data.mode === "comped") {
+      if (data.mode === "comped") {
         msg.className = "ok";
         msg.textContent = "Booking confirmed at no charge. Confirmation email triggered.";
         btn.style.display = "none";
-        document.getElementById('invoice-btn').style.display = "none";
         await loadAvailability();
       } else if (data.approveUrl) {
         msg.textContent = "Redirecting you to PayPal to complete Payment 1…";
@@ -954,8 +1000,7 @@
       console.error(err);
       msg.textContent = "Network error — please check your connection and try again.";
       btn.disabled = false;
-      document.getElementById('invoice-btn').disabled = false;
-      btn.textContent = "Continue to Payment";
+      btn.textContent = "Continue to Payment — $130 due today";
     }
     return false;
   }
@@ -992,10 +1037,6 @@
     window.history.replaceState({}, "", window.location.pathname);
     setTimeout(() => banner.remove(), 15000);
   }
-
-  document.getElementById('invoice-btn').addEventListener('click', function(){
-    submitForm(null, "invoice");
-  });
 
   renderDayNames();
   renderCalendar();
