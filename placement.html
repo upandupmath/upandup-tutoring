@@ -478,19 +478,19 @@ function registrationScreen(){
     </div>
     <div class="reg-form">
       <div>
-        <label>Parent / Guardian Name</label>
+        <label for="reg-parent">Parent / Guardian Name</label>
         <input type="text" id="reg-parent" maxlength="120" autocomplete="name" placeholder="Jane Smith" required>
       </div>
       <div>
-        <label>Parent Email</label>
+        <label for="reg-email">Parent Email</label>
         <input type="email" id="reg-email" maxlength="254" autocomplete="email" placeholder="jane@email.com" required>
       </div>
       <div>
-        <label>Student First Name</label>
+        <label for="reg-student">Student First Name</label>
         <input type="text" id="reg-student" maxlength="80" autocomplete="off" placeholder="Marcus" required>
       </div>
       <div>
-        <label>Student's Current Grade</label>
+        <label for="reg-grade">Student's Current Grade</label>
         <select id="reg-grade" required>
           <option value="">Select grade</option>
           <option value="6">Entering 6th Grade</option>
@@ -501,7 +501,7 @@ function registrationScreen(){
         </select>
       </div>
       <div>
-        <label>Student Email <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.6">(optional)</span></label>
+        <label for="reg-student-email">Student Email <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.6">(optional)</span></label>
         <input type="email" id="reg-student-email" maxlength="254" autocomplete="email" placeholder="student@email.com">
       </div>
       <div class="full" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;">
@@ -513,7 +513,7 @@ function registrationScreen(){
         <span>I am the parent/guardian or an authorized adult, and I consent to submitting this student's name, grade, and assessment results to Up and Up Educational Services for tutoring and follow-up. This information is not submitted for advertising.</span>
       </label>
       <div class="full" style="display:flex;align-items:flex-end;">
-        <button class="btn" id="reg-btn" style="width:100%">Start the Free Placement Test &rarr;</button>
+        <button type="button" class="btn" id="reg-btn" style="width:100%">Start the Free Placement Test &rarr;</button>
       </div>
       <div class="reg-err full" id="reg-err" role="alert" aria-live="polite"></div>
     </div>
@@ -612,8 +612,8 @@ function questionScreen(){
       <span class="area-tag"><span class="ti">${A.icon}</span>${A.name}</span>
       <span class="qcount">${i+1} / ${qs.length}</span>
     </div>
-    <div class="qtext">${Q.q}</div>
-    <div class="choices" role="group">
+    <div class="qtext" id="question-text">${Q.q}</div>
+    <div class="choices" role="group" aria-labelledby="question-text">
       ${Q.c.map((c,ci)=>`
         <button class="choice ${state.answers[i]===ci?"picked":""}" data-c="${ci}">
           <span class="key">${"ABCD"[ci]}</span><span>${c}</span>
