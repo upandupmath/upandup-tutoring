@@ -1,63 +1,59 @@
-# Up and Up Educational Services — Tutoring Booking Site
+# Up and Up Educational Services — Tutoring Site
 
-One-page virtual math tutoring site with live booking, split payments (PayPal), automatic second-payment billing, and Google Calendar + Meet integration.
+Public GitHub Pages site for virtual math tutoring, placement tests, and instructor-led student assessments.
 
-## What's already live
+## Production status
 
-The backend is **already deployed** to Supabase project `otdyhyzghaohnhtwzkvu`:
+The public frontend is live at:
 
-| Piece | Status |
-|---|---|
-| Database tables (`edu_packages`, `edu_sessions`, `edu_config`) | ✅ Deployed |
-| `edu-availability` — returns booked slots so the calendar greys them out | ✅ Deployed & tested |
-| `edu-create-package` — validates the 4 slots, applies discount server-side, creates PayPal order for Payment 1 with card vaulting | ✅ Deployed & tested |
-| `edu-capture-payment` — captures Payment 1, saves the vault token, confirms sessions 1–2, creates Calendar events + Meet links | ✅ Deployed |
-| `edu-charge-second-payment` — auto-charges Payment 2 within 3 days of session 3, confirms sessions 3–4 | ✅ Deployed |
-| Daily cron (12:00 UTC) that runs the auto-charge | ✅ Scheduled |
+https://upandupmath.github.io/upandup-tutoring/
 
-The `supabase/functions/` folder in this repo is a **reference copy** of the deployed code.
+The pages call a Supabase project for booking availability and package creation, and use separate report-delivery integrations for assessment results.
 
-## Publish the site (free, via GitHub Pages)
+### Recovery warning
 
-1. Create a new repository on github.com (e.g. `upandup-tutoring`)
-2. Upload `index.html` (drag and drop works on github.com)
-3. Repo → Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, folder `/ (root)` → Save
-4. Your site goes live at `https://<your-username>.github.io/upandup-tutoring/` in a minute or two
+As of the August 31, 2026 repository audit, the backend code and database migrations described by the previous README were **not present on `main`**. In particular, `supabase/functions/` did not exist even though the README called it a reference copy of the deployed code.
 
-No build step, no cost.
+Treat the currently deployed Supabase project as the only known copy of the production backend until its functions, schema, schedules, and configuration names have been exported and reconciled. Do not redeploy payment functions, rotate payment configuration, or accept a new payment integration based only on this repository.
 
-## ⚠️ Before real parents can pay: switch PayPal to LIVE
+Follow [the production recovery runbook](docs/production-recovery.md) before any backend or payment cutover.
 
-The project's PayPal secrets are currently **sandbox** (test mode). To go live:
+## Frontend pages
 
-1. Log into https://developer.paypal.com with your PayPal Business account
-2. Apps & Credentials → toggle **Live** → create (or open) an app → copy the **Client ID** and **Secret**
-3. In Supabase dashboard → Project Settings → Edge Functions → Secrets, update:
-   - `PAYPAL_CLIENT_ID` → your live client ID
-   - `PAYPAL_CLIENT_SECRET` → your live secret
-   - `PAYPAL_BASE_URL` → `https://api-m.paypal.com`
-4. **Vaulting requirement:** the automatic second payment saves the parent's payment method ("vault"). Your live PayPal app must have **Vault / Save payment methods** enabled (Apps & Credentials → your app → Features → check "Vault"). If PayPal requires approval for this feature on your account, request it — it's standard for tutoring/subscription businesses.
+- `index.html` — marketing, availability, registration, and checkout entry
+- `placement.html` — public parent-consented placement assessment
+- `assessments.html` — instructor-code assessment page
+- `teaching.jpg` — tutor photo used by the homepage
 
-## Changing prices or the discount code
+## Verification
 
-Pricing lives in the database (server-side, so nobody can tamper with it from the browser). In Supabase → SQL Editor:
+Pull requests and pushes to `main` run a dependency-free verifier:
 
-```sql
-update edu_config set value = '65' where key = 'price_per_session';
-update edu_config set value = 'FAMILY15' where key = 'discount_code';
-update edu_config set value = '60' where key = 'discount_price_per_session';
+```sh
+node scripts/verify-site.mjs
 ```
 
-Also update the matching display numbers near the bottom of `index.html` (`SESSION_PRICE`, `DISCOUNTED_PRICE`, `DISCOUNT_CODE`) so the pricing card shows the same values.
+It checks inline JavaScript syntax, local links, common committed credential patterns, the four-session booking cap, fail-closed availability behavior, and privacy/security invariants.
 
-## How a booking flows
+## Publishing the frontend
 
-1. Parent picks 4 weekday slots (4–7 PM), fills the form, submits
-2. `edu-create-package` re-validates everything, reserves the slots, and redirects to PayPal for **Payment 1** (sessions 1 & 2), with the payment method vaulted for later
-3. On return, `edu-capture-payment` captures the money, confirms sessions 1 & 2, and fires your Google Apps Script webhook, which creates the Calendar events with Meet links and emails the parent
-4. Every day at 12:00 UTC, the cron job finds packages whose session 3 is within 3 days and auto-charges **Payment 2** against the vaulted method, then confirms sessions 3 & 4 and creates their calendar events
-5. If a charge fails, the package's `payment2_status` is marked `failed` — check the `edu_packages` table (or Supabase logs) periodically, or ask Claude to build an email alert for failures
+GitHub Pages publishes `main` from the repository root. Frontend changes should go through a pull request and pass the Verify site workflow before merge.
 
-## Viewing your bookings
+There is no frontend build step.
 
-Supabase dashboard → Table Editor → `edu_packages` (one row per family/package) and `edu_sessions` (one row per session). Or ask Claude to build you an admin page.
+## Pricing and payment changes
+
+Displayed prices in `index.html` and server-side prices in Supabase must match, but the server is the authority. Before changing either:
+
+1. export the deployed functions and database schema
+2. back up production data outside this public repository
+3. verify the current payment provider and environment
+4. test the complete flow in a non-production environment
+5. reconcile successful payment, duplicate callback, decline, cancellation, and retry cases
+6. use a reviewed pull request for the frontend change
+
+Never put payment secrets, service-role keys, database connection strings, access codes, or report endpoints in GitHub Pages or committed files.
+
+## Current work
+
+The Stripe migration is staged separately in [draft PR #2](https://github.com/upandupmath/upandup-tutoring/pull/2). It is not deployed or approved for merge until the account and backend setup checklist is complete.
