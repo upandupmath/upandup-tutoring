@@ -742,8 +742,6 @@ function resultsScreen(){
     started_at: timerStart ? timerStart.toISOString() : null,
     completed_at: timerEnd ? timerEnd.toISOString() : null,
     duration_seconds: getElapsedSeconds(),
-    consented_at: regData.consentedAt,
-    consent_version: "placement-results-v1",
     report_text: emailLines.join("\n")
   });
 
