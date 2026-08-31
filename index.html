@@ -456,7 +456,7 @@
   <div class="container">
     <div class="section-label">Pricing</div>
     <h2>Simple, one-rate pricing.</h2>
-    <p class="lead-muted">No tiers to compare. Book one four-session package and pay two sessions at a time — never more than two sessions in advance. Handled through PayPal, and we accept all major credit cards.</p>
+    <p class="lead-muted">No tiers to compare. Book one four-session package and pay two sessions at a time — never more than two sessions in advance. Handled securely through Stripe Checkout, with all major credit cards accepted.</p>
 
     <div class="pricing-card">
       <div class="price-row">
@@ -470,7 +470,7 @@
         <li>Monday–Friday, 4:00–7:00 PM — calendar booking synced automatically</li>
         <li>Grades 6–10 · middle school math through Geometry</li>
         <li>Billed $130 at a time (2 sessions) — never pay weeks ahead</li>
-        <li>Invoiced through PayPal · Visa, Mastercard, Amex, Discover accepted</li>
+        <li>Secure Stripe Checkout · Visa, Mastercard, Amex, Discover accepted</li>
       </ul>
 
       <div class="promo-row">
@@ -505,7 +505,7 @@
     <div class="policy-grid">
       <div class="policy-card">
         <h3>The 4-session minimum &amp; how billing works</h3>
-        <p>Every sign-up books exactly four sessions — enough runway to make meaningful progress without paying for the full package up front. You pay $130 for sessions 1 and 2 when you book. The remaining $130 covers sessions 3 and 4 and is charged according to the payment authorization completed through PayPal.</p>
+        <p>Every sign-up books exactly four sessions — enough runway to make meaningful progress without paying for the full package up front. You pay $130 for sessions 1 and 2 when you book. The remaining $130 covers sessions 3 and 4 and is charged through Stripe within 3 days before session 3, using the authorization you complete at checkout.</p>
       </div>
       <div class="policy-card">
         <h3>Rescheduling</h3>
@@ -537,7 +537,7 @@
     </details>
     <details>
       <summary>How does payment work?</summary>
-      <p>The four-session package is paid in two parts. $130 covers sessions 1 and 2 and is paid when you book. The remaining $130 covers sessions 3 and 4 and is charged using the payment authorization completed through PayPal. Visa, Mastercard, Amex and Discover are accepted; no PayPal account is required.</p>
+      <p>The four-session package is paid in two parts. $130 covers sessions 1 and 2 and is paid when you book. The remaining $130 covers sessions 3 and 4 and is charged through Stripe within 3 days before session 3, using the card authorization you complete at checkout. Visa, Mastercard, Amex and Discover are accepted; no separate account is required.</p>
     </details>
     <details>
       <summary>How do we join the Google Meet?</summary>
@@ -627,7 +627,12 @@
           <input type="text" id="form-promo" placeholder="Enter code if you have one">
         </div>
 
-        <button type="submit" id="submit-btn">Continue to Payment — <span id="pay-now-amount">$130</span> due today</button>
+        <label class="full" style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:.83rem;line-height:1.45;">
+          <input type="checkbox" id="payment-auth" required style="width:auto;margin-top:3px;accent-color:var(--accent);">
+          <span>I authorize the remaining $130 package payment to be charged to this card through Stripe within 3 days before session 3.</span>
+        </label>
+
+        <button type="submit" id="submit-btn">Continue to Secure Checkout — <span id="pay-now-amount">$130</span> due today</button>
         <div id="form-msg"></div>
       </form>
     </div>
@@ -926,7 +931,7 @@
     }
   }
 
-  /* ---------- Submit → create package → PayPal ---------- */
+  /* ---------- Submit → reserve package → Stripe Checkout ---------- */
   async function submitForm(e){
     if (e && e.preventDefault) e.preventDefault();
     const msg = document.getElementById('form-msg');
@@ -964,10 +969,11 @@
           subject: document.getElementById('subject').value,
           notes: document.getElementById('notes').value,
           discount_code: document.getElementById('form-promo').value,
-          payment_method: "paypal",
+          payment_method: "stripe",
+          payment_authorized: document.getElementById('payment-auth').checked,
           sessions: chosenSessions,
-          return_url: pageUrl + "?paypal=return",
-          cancel_url: pageUrl + "?paypal=cancel",
+          return_url: pageUrl,
+          cancel_url: pageUrl + "?stripe=cancel",
         }),
       });
       const data = await res.json();
@@ -989,9 +995,9 @@
         msg.textContent = "Booking confirmed at no charge. Confirmation email triggered.";
         btn.style.display = "none";
         await loadAvailability();
-      } else if (data.approveUrl) {
-        msg.textContent = "Redirecting you to PayPal to complete Payment 1…";
-        window.location.href = data.approveUrl;
+      } else if (data.checkoutUrl) {
+        msg.textContent = "Redirecting you to secure Stripe Checkout…";
+        window.location.href = data.checkoutUrl;
       } else {
         msg.textContent = "Booking created but no payment link was returned. Please contact us.";
         btn.disabled = false;
@@ -1005,33 +1011,51 @@
     return false;
   }
 
-  /* ---------- Handle return from PayPal ---------- */
-  async function handlePayPalReturn(){
+  /* ---------- Handle return from Stripe Checkout ---------- */
+  async function handleStripeReturn(){
     const params = new URLSearchParams(window.location.search);
-    if (params.get("paypal") !== "return") return;
-    const orderId = params.get("token");
-    if (!orderId) return;
+    const state = params.get("stripe");
+    if (state !== "return" && state !== "cancel") return;
 
     const banner = document.createElement("div");
     banner.style.cssText = "position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:100;background:#0d1526;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:18px 26px;box-shadow:0 20px 50px -20px rgba(0,0,0,0.5);max-width:90%;text-align:center;font-size:0.95rem;";
-    banner.textContent = "Finalizing your payment…";
     document.body.appendChild(banner);
 
+    if (state === "cancel") {
+      banner.textContent = "Payment was canceled. No sessions are confirmed and the temporary slot hold will expire automatically.";
+      window.history.replaceState({}, "", window.location.pathname);
+      setTimeout(() => banner.remove(), 12000);
+      return;
+    }
+
+    const sessionId = params.get("session_id");
+    if (!sessionId) {
+      banner.textContent = "Stripe returned without a Checkout Session ID. Please contact us.";
+      return;
+    }
+
+    banner.textContent = "Confirming your payment…";
     try {
-      const res = await fetch(`${API_BASE}/edu-capture-payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order_id: orderId }),
-      });
-      const data = await res.json();
-      if (res.ok && (data.status === "captured" || data.status === "already_captured")) {
-        banner.innerHTML = "✅ <strong>Payment received — you're booked!</strong><br>Sessions 1 & 2 are confirmed and calendar invites with Google Meet links are on the way. Your next $130 is charged after session 2, for sessions 3 & 4.";
-        banner.style.borderColor = "#2dd4bf";
-      } else {
-        banner.textContent = "We couldn't confirm your payment automatically. If you completed payment on PayPal, don't worry — we'll reconcile it and email you. " + (data.error || "");
+      let data = null;
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        const res = await fetch(API_BASE + "/edu-checkout-status?session_id=" + encodeURIComponent(sessionId));
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unable to retrieve payment status");
+        if (data.payment_status === "captured" || data.payment_status === "comped" || data.payment_status === "failed") break;
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
-    } catch {
-      banner.textContent = "We couldn't confirm your payment automatically. If you completed payment on PayPal, we'll reconcile it and email you.";
+
+      if (data && (data.payment_status === "captured" || data.payment_status === "comped")) {
+        banner.innerHTML = "✅ <strong>Payment received — you're booked!</strong><br>Sessions 1 & 2 are confirmed. Calendar invites and Google Meet links are on the way.";
+        banner.style.borderColor = "#2dd4bf";
+      } else if (data && data.payment_status === "failed") {
+        banner.textContent = "The payment was not completed. No sessions are confirmed; please try again.";
+      } else {
+        banner.textContent = "Stripe is still confirming the payment. Keep your receipt; your confirmation email will follow.";
+      }
+    } catch (error) {
+      console.error(error);
+      banner.textContent = "We couldn't retrieve the confirmation yet. Keep your Stripe receipt; we'll reconcile the payment and email you.";
     }
 
     window.history.replaceState({}, "", window.location.pathname);
@@ -1043,7 +1067,7 @@
   renderSessionList();
   refreshPricing();
   loadAvailability();
-  handlePayPalReturn();
+  handleStripeReturn();
 </script>
 
 </body>
