@@ -140,8 +140,8 @@ input:focus{outline:3px solid rgba(14,159,110,.35);border-color:var(--accent)}
 </div>
 
 <script>
-/* Casual access gate only. Static-page source is not a secure item bank. */
-const PASS = "UpAndUp2026";
+const ASSESSMENT_API_URL = "https://otdyhyzghaohnhtwzkvu.supabase.co/functions/v1/edu-assessment-auth";
+let assessmentToken = "";
 
 function escapeHtml(value){
   return String(value).replace(/[&<>"']/g,ch=>({
@@ -465,10 +465,41 @@ function passwordScreen(){
   document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")checkPw()});
 }
 
-function checkPw(){
-  const v=document.getElementById("pw").value.trim();
-  if(v===PASS){authed=true;gradePickerScreen()}
-  else{document.getElementById("pw-err").textContent="Incorrect access code. Please try again."}
+async function checkPw(){
+  const input=document.getElementById("pw");
+  const btn=document.getElementById("pwBtn");
+  const err=document.getElementById("pw-err");
+  const accessCode=input.value.trim();
+  if(!accessCode){err.textContent="Enter the access code provided by Brother Truth.";return}
+  btn.disabled=true;
+  btn.textContent="Checking...";
+  err.textContent="";
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+    const response=await fetch(ASSESSMENT_API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      signal:controller.signal,
+      body:JSON.stringify({action:"login",accessCode})
+    });
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||"Access could not be verified");
+    if(!data.token)throw new Error("The assessment service returned an invalid session");
+    assessmentToken=data.token;
+    input.value="";
+    authed=true;
+    gradePickerScreen();
+  }catch(error){
+    console.error("Assessment login failed:",error);
+    err.textContent=error.name==="AbortError"
+      ?"The assessment service timed out. Please try again."
+      :(error.message||"Access could not be verified. Please try again.");
+    btn.disabled=false;
+    btn.textContent="Continue";
+  }finally{
+    clearTimeout(timeout);
+  }
 }
 
 function gradePickerScreen(){
@@ -728,34 +759,41 @@ function resultsScreen(){
   window.scrollTo({top:0,behavior:"instant"});
 }
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMHiWO6YQmPQdlq2f9_YHSS-FWY-aKPbxitJcKrUS1_KXXFwjv37FI6c3fpqsfpOEI4Q/exec";
-
 async function sendReportEmail(studentName, gradeLevel, pct, verdict, reportText){
-  const statusEl = document.getElementById("email-status");
-  if(statusEl) statusEl.textContent = "Submitting report for delivery...";
-  const controller = new AbortController();
-  const timeout = setTimeout(()=>controller.abort(),10000);
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      referrerPolicy: "no-referrer",
-      signal: controller.signal,
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
-      body: JSON.stringify({
-        action: "assessmentReport",
-        studentName: studentName.slice(0,80),
-        gradeLevel: gradeLevel,
-        score: pct,
-        verdict: verdict,
-        report: reportText.slice(0,20000)
+  const statusEl=document.getElementById("email-status");
+  if(statusEl)statusEl.textContent="Submitting report for delivery...";
+  if(!assessmentToken){
+    if(statusEl)statusEl.textContent="Your assessment session has expired — please print or save this report.";
+    return;
+  }
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+    const response=await fetch(ASSESSMENT_API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      signal:controller.signal,
+      body:JSON.stringify({
+        action:"report",
+        token:assessmentToken,
+        report:{
+          studentName:studentName.slice(0,80),
+          gradeLevel,
+          score:pct,
+          verdict,
+          reportText:reportText.slice(0,20000)
+        }
       })
     });
-    if(statusEl) statusEl.textContent = "Report submitted for delivery";
-  } catch(e){
-    console.error("Report submission failed:", e);
-    if(statusEl) statusEl.textContent = "Report delivery could not be confirmed — please save or print this page.";
-  } finally {
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||"Report delivery failed");
+    if(statusEl)statusEl.textContent="Report submitted for delivery";
+  }catch(error){
+    console.error("Report submission failed:",error);
+    if(statusEl)statusEl.textContent=error.name==="AbortError"
+      ?"Report delivery timed out — please save or print this page."
+      :(error.message||"Report delivery could not be confirmed — please save or print this page.");
+  }finally{
     clearTimeout(timeout);
   }
 }
