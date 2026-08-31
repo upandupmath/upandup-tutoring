@@ -34,6 +34,8 @@ create table if not exists public.edu_packages (
   payment1_status text not null default 'reserved',
   payment2_status text not null default 'not_due',
   payment2_error text,
+  payment_authorized_at timestamptz,
+  payment_authorization_version text,
   stripe_checkout_session_id text unique,
   stripe_payment1_intent_id text unique,
   stripe_payment2_intent_id text unique,
@@ -42,6 +44,28 @@ create table if not exists public.edu_packages (
   calendar_sync_status text not null default 'pending',
   calendar_sync_error text
 );
+
+alter table public.edu_packages
+  add column if not exists updated_at timestamptz not null default now(),
+  add column if not exists student_email text,
+  add column if not exists reservation_expires_at timestamptz,
+  add column if not exists payment2_error text,
+  add column if not exists payment_authorized_at timestamptz,
+  add column if not exists payment_authorization_version text,
+  add column if not exists stripe_checkout_session_id text,
+  add column if not exists stripe_payment1_intent_id text,
+  add column if not exists stripe_payment2_intent_id text,
+  add column if not exists stripe_customer_id text,
+  add column if not exists stripe_payment_method_id text,
+  add column if not exists calendar_sync_status text not null default 'pending',
+  add column if not exists calendar_sync_error text;
+
+create unique index if not exists edu_packages_stripe_checkout_uidx
+  on public.edu_packages(stripe_checkout_session_id) where stripe_checkout_session_id is not null;
+create unique index if not exists edu_packages_stripe_payment1_uidx
+  on public.edu_packages(stripe_payment1_intent_id) where stripe_payment1_intent_id is not null;
+create unique index if not exists edu_packages_stripe_payment2_uidx
+  on public.edu_packages(stripe_payment2_intent_id) where stripe_payment2_intent_id is not null;
 
 create table if not exists public.edu_sessions (
   id uuid primary key default gen_random_uuid(),
@@ -110,14 +134,16 @@ begin
   insert into edu_packages (
     id, parent_name, parent_email, student_email, student_grade, subject, notes,
     discount_code, price_per_session, payment1_amount, payment2_amount, currency,
-    reservation_expires_at, payment1_status, payment2_status
+    reservation_expires_at, payment1_status, payment2_status,
+    payment_authorized_at, payment_authorization_version
   ) values (
     v_package_id, left(p_package->>'parent_name',120), lower(p_package->>'parent_email'),
     nullif(lower(p_package->>'student_email'),''), p_package->>'student_grade',
     left(p_package->>'subject',80), left(p_package->>'notes',2000),
     nullif(left(p_package->>'discount_code',64),''),
     v_price, v_price*2, v_price*2, 'USD',
-    (p_package->>'reservation_expires_at')::timestamptz, 'reserved', 'not_due'
+    (p_package->>'reservation_expires_at')::timestamptz, 'reserved', 'not_due',
+    now(), p_package->>'payment_authorization_version'
   );
 
   insert into edu_sessions (
@@ -226,7 +252,9 @@ returns boolean language plpgsql security definer set search_path = public
 as $$
 begin
   insert into edu_stripe_events(event_id,event_type) values(p_event_id,p_event_type)
-  on conflict(event_id) do nothing;
+  on conflict(event_id) do update
+    set status='processing', error=null, received_at=now()
+    where edu_stripe_events.status='failed';
   return found;
 end;
 $$;
@@ -249,7 +277,7 @@ select p.id package_id, round(p.payment2_amount*100)::bigint amount_cents,
 from edu_packages p
 join edu_sessions s on s.package_id=p.id and s.session_number=3
 where p.payment1_status='captured'
-  and p.payment2_status in ('not_due','failed')
+  and p.payment2_status='not_due'
   and p.stripe_customer_id is not null
   and p.stripe_payment_method_id is not null
   and s.session_date between current_date and current_date+3;
