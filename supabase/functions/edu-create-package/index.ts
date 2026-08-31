@@ -16,7 +16,7 @@ import { createCheckoutSession } from "../_shared/stripe.ts";
 const VALID_TIMES = new Set(["16:00", "17:00", "18:00", "19:00"]);
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const GRADES = new Set(["6", "7", "8", "9", "10", "11", "12"]);
-const RESERVATION_MINUTES = 30;
+const RESERVATION_MINUTES = 35;
 
 function easternToday() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -89,6 +89,9 @@ Deno.serve(async (request) => {
     const discountCode = cleanText(input.discount_code, "Discount code", 64, false);
     const returnUrl = trustedRedirect(input.return_url, "Return URL");
     const cancelUrl = trustedRedirect(input.cancel_url, "Cancel URL");
+    if (input.payment_authorized !== true) {
+      throw new HttpError(400, "Second-payment authorization is required");
+    }
 
     packageId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + RESERVATION_MINUTES * 60 * 1000);
@@ -102,6 +105,7 @@ Deno.serve(async (request) => {
         subject,
         notes,
         discount_code: discountCode,
+        payment_authorization_version: "stripe-split-v1",
         reservation_expires_at: expiresAt.toISOString(),
       },
       p_sessions: sessions,
