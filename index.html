@@ -619,6 +619,8 @@
         </div>
 
         <button type="submit" id="submit-btn">Continue to Payment — <span id="pay-now-amount">$130</span> due today</button>
+        <button type="button" id="invoice-btn" style="margin-top:10px;width:100%;background:transparent;border:1.5px solid var(--line);color:inherit;padding:14px;border-radius:12px;font-weight:600;cursor:pointer;font-size:.95rem;">Invoice me instead — due in 14 days</button>
+        <p style="margin:8px 0 0;font-size:.78rem;opacity:.7;text-align:center;">Your slots are held. Pay by the due date on the invoice.</p>
         <div id="form-msg"></div>
       </form>
     </div>
@@ -635,6 +637,7 @@
   /* ================= BACKEND INTEGRATION ================= */
   const API_BASE = "https://otdyhyzghaohnhtwzkvu.supabase.co/functions/v1";
   const VALID_TIMES = ["4:00–5:00 PM", "5:00–6:00 PM", "6:00–7:00 PM"];
+  const BOOKING_HORIZON_MONTHS = 6;   // how far ahead parents may book
 
   let bookedSlots = new Set();      // "YYYY-MM-DD|time"
   let chosenSessions = [];          // [{date, time}]
@@ -643,7 +646,9 @@
   async function loadAvailability(){
     try {
       const from = new Date().toISOString().slice(0,10);
-      const res = await fetch(`${API_BASE}/edu-availability?from=${from}&to=2026-12-31`);
+      const to = new Date(); to.setMonth(to.getMonth() + BOOKING_HORIZON_MONTHS);
+      const toIso = to.toISOString().slice(0,10);
+      const res = await fetch(`${API_BASE}/edu-availability?from=${from}&to=${toIso}`);
       const data = await res.json();
       bookedSlots = new Set((data.booked || []).map(b => b.session_date + "|" + b.session_time));
       renderCalendar();
@@ -665,7 +670,8 @@
   let viewMonth = today.getMonth();
 
   const MIN_MONTH_INDEX = today.getFullYear() * 12 + today.getMonth();
-  const MAX_MONTH_INDEX = 2026 * 12 + 11;
+  const _horizon = new Date(today.getFullYear(), today.getMonth() + BOOKING_HORIZON_MONTHS, 1);
+  const MAX_MONTH_INDEX = _horizon.getFullYear() * 12 + _horizon.getMonth();
 
   const dayNames = ["Su","Mo","Tu","We","Th","Fr","Sa"];
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -832,8 +838,9 @@
   }
 
   /* ---------- Submit → create package → PayPal ---------- */
-  async function submitForm(e){
-    e.preventDefault();
+  async function submitForm(e, paymentMethod){
+    if (e && e.preventDefault) e.preventDefault();
+    paymentMethod = paymentMethod || "paypal";
     const msg = document.getElementById('form-msg');
     const btn = document.getElementById('submit-btn');
     msg.textContent = "";
@@ -844,7 +851,8 @@
     }
 
     btn.disabled = true;
-    btn.textContent = "Setting up your booking…";
+    document.getElementById('invoice-btn').disabled = true;
+    btn.textContent = paymentMethod === "invoice" ? "Preparing your invoice…" : "Setting up your booking…";
 
     const pageUrl = window.location.origin + window.location.pathname;
 
@@ -859,6 +867,7 @@
           subject: document.getElementById('subject').value,
           notes: document.getElementById('notes').value,
           discount_code: document.getElementById('form-promo').value,
+          payment_method: paymentMethod,
           sessions: chosenSessions,
           return_url: pageUrl + "?paypal=return",
           cancel_url: pageUrl + "?paypal=cancel",
@@ -874,11 +883,25 @@
           msg.textContent = data.error || "Something went wrong. Please try again.";
         }
         btn.disabled = false;
+        document.getElementById('invoice-btn').disabled = false;
         btn.innerHTML = 'Continue to Payment — <span id="pay-now-amount">$' + (data.payment1_amount ?? 130) + '</span> due today';
         return false;
       }
 
-      if (data.approveUrl) {
+      if (data.mode === "invoice") {
+        msg.className = "ok";
+        msg.textContent = "Booked. Your invoice for $" + Number(data.total_amount).toFixed(2) +
+          " is due " + data.invoice_due_date + ". Your 4 slots are held.";
+        btn.style.display = "none";
+        document.getElementById('invoice-btn').style.display = "none";
+        await loadAvailability();
+      } else if (data.mode === "comped") {
+        msg.className = "ok";
+        msg.textContent = "Booking confirmed at no charge. Confirmation email triggered.";
+        btn.style.display = "none";
+        document.getElementById('invoice-btn').style.display = "none";
+        await loadAvailability();
+      } else if (data.approveUrl) {
         msg.textContent = "Redirecting you to PayPal to complete Payment 1…";
         window.location.href = data.approveUrl;
       } else {
@@ -889,6 +912,7 @@
       console.error(err);
       msg.textContent = "Network error — please check your connection and try again.";
       btn.disabled = false;
+      document.getElementById('invoice-btn').disabled = false;
       btn.textContent = "Continue to Payment";
     }
     return false;
@@ -926,6 +950,10 @@
     window.history.replaceState({}, "", window.location.pathname);
     setTimeout(() => banner.remove(), 15000);
   }
+
+  document.getElementById('invoice-btn').addEventListener('click', function(){
+    submitForm(null, "invoice");
+  });
 
   renderDayNames();
   renderCalendar();
