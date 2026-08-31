@@ -259,24 +259,26 @@
   .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.92rem;color:#fff;}
   .cal-nav{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;border-radius:10px;width:30px;height:30px;cursor:pointer;padding:0;font-size:0.9rem;}
   .cal-nav:disabled{opacity:0.3;cursor:not-allowed;}
-  .cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
   #cal-daynames{margin-bottom:8px;font-size:0.68rem;font-weight:600;letter-spacing:0.05em;color:rgba(255,255,255,0.45);text-align:center;text-transform:uppercase;}
   .cal-day{
-    display:flex;flex-direction:column;gap:3px;padding:6px 4px;
-    border-radius:10px;color:#fff;background:rgba(255,255,255,0.04);
+    display:flex;flex-direction:column;gap:2px;padding:4px 3px;
+    border-radius:9px;color:#fff;background:rgba(255,255,255,0.04);
     border:1px solid rgba(255,255,255,0.07);
   }
-  .cal-daynum{font-size:0.74rem;font-weight:600;text-align:center;opacity:.75;margin-bottom:1px;}
+  .cal-daynum{font-size:0.7rem;font-weight:600;text-align:center;opacity:.75;}
+  /* weekends keep their box but hold no times */
+  .cal-day.noslots{justify-content:flex-start;}
   .cal-day.blank{visibility:hidden;}
   .cal-day.disabled{background:none;border-color:transparent;}
   .cal-day.disabled .cal-daynum{color:rgba(255,255,255,0.18);}
   /* one tappable time chip per slot, printed right on the date */
   .cal-slot{
-    display:flex;align-items:center;justify-content:center;gap:2px;
-    font-size:0.63rem;font-weight:600;line-height:1;padding:5px 2px;
-    border-radius:6px;border:1px solid rgba(255,255,255,0.16);
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.6rem;font-weight:600;line-height:1;padding:4px 0;
+    border-radius:5px;border:1px solid rgba(255,255,255,0.16);
     background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;
-    font-family:'Inter',sans-serif;width:100%;
+    font-family:'Inter',sans-serif;width:100%;letter-spacing:-0.02em;
   }
   .cal-slot:hover{background:rgba(14,159,110,0.35);border-color:rgba(14,159,110,0.6);}
   .cal-slot.added{background:rgba(52,211,153,0.22);border-color:rgba(52,211,153,0.65);color:#6ee7b7;}
@@ -285,8 +287,10 @@
   .cal-slot.taken:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);}
   .cal-slot:disabled{cursor:not-allowed;}
   @media(max-width:560px){
-    .cal-slot{font-size:0.58rem;padding:4px 1px;}
-    .cal-day{padding:5px 3px;}
+    .cal-grid{gap:3px;}
+    .cal-slot{font-size:0.52rem;padding:3px 0;border-radius:4px;}
+    .cal-day{padding:3px 2px;gap:2px;}
+    .cal-daynum{font-size:0.62rem;}
   }
 
   footer{padding:40px 0;color:var(--muted);font-size:0.85rem;text-align:center;}
@@ -678,8 +682,8 @@
   const _horizon = new Date(today.getFullYear(), today.getMonth() + BOOKING_HORIZON_MONTHS, 1);
   const MAX_MONTH_INDEX = _horizon.getFullYear() * 12 + _horizon.getMonth();
 
-  const dayNames = ["Mon","Tue","Wed","Thu","Fri"];
-  const SLOT_LABELS = { "4:00\u20135:00 PM": "4p", "5:00\u20136:00 PM": "5p", "6:00\u20137:00 PM": "6p" };
+  const dayNames = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+  const SLOT_LABELS = { "4:00\u20135:00 PM": "4", "5:00\u20136:00 PM": "5", "6:00\u20137:00 PM": "6" };
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
   function isoOf(date){
@@ -695,12 +699,10 @@
     const grid = document.getElementById('cal-days');
     grid.innerHTML = "";
 
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-    // Weekday-only grid (Mon-Fri): column index 0..4
-    const firstDow = new Date(viewYear, viewMonth, 1).getDay();     // 0=Sun
-    let leading = firstDow === 0 ? 0 : (firstDow === 6 ? 0 : firstDow - 1);
-    for (let i = 0; i < leading; i++) {
+    for (let i = 0; i < firstDay; i++) {
       const blank = document.createElement('div');
       blank.className = "cal-day blank";
       grid.appendChild(blank);
@@ -708,45 +710,48 @@
 
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d);
-      const dow = date.getDay();
-      if (dow === 0 || dow === 6) continue;          // skip weekends entirely
-
       const iso = isoOf(date);
+      const dow = date.getDay();
+      const isWeekend = (dow === 0 || dow === 6);
       const isPast = date < today;
+      const bookable = !isWeekend && !isPast;
 
       const cell = document.createElement('div');
-      cell.className = "cal-day" + (isPast ? " disabled" : "");
+      cell.className = "cal-day" + (bookable ? "" : " disabled noslots");
 
       const num = document.createElement('div');
       num.className = "cal-daynum";
       num.textContent = d;
       cell.appendChild(num);
 
-      VALID_TIMES.forEach(function(t){
-        const chip = document.createElement('button');
-        chip.type = "button";
-        const short = SLOT_LABELS[t] || t;
-        const booked = bookedSlots.has(iso + "|" + t);
-        const inCart = chosenSessions.some(function(x){ return x.date === iso && x.time === t; });
+      // Times live inside the date box itself - one tap to add.
+      if (bookable) {
+        VALID_TIMES.forEach(function(t){
+          const chip = document.createElement('button');
+          chip.type = "button";
+          const short = SLOT_LABELS[t] || t;
+          const booked = bookedSlots.has(iso + "|" + t);
+          const inCart = chosenSessions.some(function(x){ return x.date === iso && x.time === t; });
 
-        if (isPast || booked) {
-          chip.className = "cal-slot taken";
-          chip.disabled = true;
-          chip.textContent = short;
-          chip.title = booked ? "Already booked" : "Date has passed";
-        } else if (inCart) {
-          chip.className = "cal-slot added";
-          chip.textContent = short + " \u2713";
-          chip.title = "In your cart \u2014 tap to remove";
-          chip.addEventListener('click', function(){ removeSlot(iso, t); });
-        } else {
-          chip.className = "cal-slot";
-          chip.textContent = short + " +";
-          chip.title = t;
-          chip.addEventListener('click', function(){ addSession(iso, t); });
-        }
-        cell.appendChild(chip);
-      });
+          if (booked) {
+            chip.className = "cal-slot taken";
+            chip.disabled = true;
+            chip.textContent = short + "p";
+            chip.title = t + " \u2014 already booked";
+          } else if (inCart) {
+            chip.className = "cal-slot added";
+            chip.textContent = short + "\u2713";
+            chip.title = t + " \u2014 in your cart, tap to remove";
+            chip.addEventListener('click', function(){ removeSlot(iso, t); });
+          } else {
+            chip.className = "cal-slot";
+            chip.textContent = short + "p+";
+            chip.title = "Add " + t;
+            chip.addEventListener('click', function(){ addSession(iso, t); });
+          }
+          cell.appendChild(chip);
+        });
+      }
 
       grid.appendChild(cell);
     }
