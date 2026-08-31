@@ -173,17 +173,27 @@ assertContains(
   "Booking is temporarily unavailable because live availability could not be confirmed.",
   "booking fails closed when live availability cannot be confirmed"
 );
+assertContains(index, 'for="parent-name"', "booking parent name has a programmatic label");
+assertContains(index, 'for="grade-level"', "booking grade selector has a programmatic label");
+assertContains(index, 'aria-label="Previous month"', "calendar previous-month control has an accessible name");
+assertContains(index, 'aria-label="Next month"', "calendar next-month control has an accessible name");
+assertContains(index, 'chip.setAttribute("aria-label"', "calendar time controls include date-aware accessible names");
+assertContains(index, 'role="status" aria-live="polite"', "booking status messages are announced");
 
 const placement = read("placement.html");
 assertContains(placement, "function escapeHtml", "placement result names are escaped");
 assertContains(placement, 'id="reg-consent"', "placement requires parent/guardian consent");
 assertNotContains(placement, "placementRegistration", "placement avoids duplicate direct registration delivery");
 assertContains(placement, "<span class=\"icon\">30</span>Minutes", "placement duration is displayed as 30 minutes");
+assertContains(placement, 'for="reg-parent"', "placement parent name has a programmatic label");
+assertContains(placement, 'for="reg-grade"', "placement grade selector has a programmatic label");
+assertContains(placement, 'aria-labelledby="question-text"', "placement answer group is tied to its question");
 
 const assessments = read("assessments.html");
 assertContains(assessments, "function escapeHtml", "assessment result names are escaped");
 assertContains(assessments, "30-question", "assessment question count is displayed accurately");
 assertNotContains(assessments, "${state.name}", "assessment results do not interpolate an unescaped student name");
+assertContains(assessments, 'aria-labelledby="question-text"', "assessment answer group is tied to its question");
 
 if (assessments.includes('const PASS = "UpAndUp2026";')) {
   warn("assessments.html still uses the known static access-code gate; backend authentication is the next security chunk");
