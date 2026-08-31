@@ -1,0 +1,10 @@
+project_id = "otdyhyzghaohnhtwzkvu"
+
+[functions.edu-availability]
+verify_jwt = false
+
+[functions.edu-create-package]
+verify_jwt = false
+
+[functions.edu-capture-payment]
+verify_jwt = false
