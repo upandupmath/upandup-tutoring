@@ -731,6 +731,7 @@ function resultsScreen(){
     parent_email: regData.parentEmail,
     student_name: state.name,
     student_email: regData.studentEmail || null,
+    consented_at: regData.consentedAt || null,
     grade_level: grade,
     score: total,
     total_questions: qs.length,
@@ -806,7 +807,7 @@ async function savePlacementResult(payload){
         ? "\u2713 Results saved and report sent to Brother Truth"
         : "\u2713 Results saved \u2014 report delivery pending";
     } else {
-      if(statusEl) statusEl.textContent = "Results recorded locally \u2014 please screenshot this page.";
+      if(statusEl) statusEl.textContent = "Couldn\u2019t save results \u2014 please screenshot this page and email it to theuauchessclub@gmail.com.";
       console.error("Save failed:", data);
     }
   } catch(e){
