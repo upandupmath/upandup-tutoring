@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const HTML_FILES = ["index.html", "assessments.html", "placement.html"];
+const HTML_FILES = ["index.html", "assessments.html", "placement.html", "confirmed.html"];
 const SKIP_DIRS = new Set([".git", "node_modules"]);
 const TEXT_EXTENSIONS = new Set([
   ".html", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".json",
@@ -181,6 +181,8 @@ assertContains(index, 'aria-label="Previous month"', "calendar previous-month co
 assertContains(index, 'aria-label="Next month"', "calendar next-month control has an accessible name");
 assertContains(index, 'chip.setAttribute("aria-label"', "calendar time controls include date-aware accessible names");
 assertContains(index, 'role="status" aria-live="polite"', "booking status messages are announced");
+assertContains(index, 'window.location.href = "confirmed.html?mode=comped"', "comped bookings use the confirmation page");
+assertContains(index, 'window.location.href = "confirmed.html?mode=paypal"', "captured PayPal bookings use the confirmation page");
 
 const placement = read("placement.html");
 assertContains(placement, "function escapeHtml", "placement result names are escaped");
@@ -200,6 +202,12 @@ assertContains(assessments, 'aria-labelledby="question-text"', "assessment answe
 if (assessments.includes('const PASS = "UpAndUp2026";')) {
   warn("assessments.html still uses the known static access-code gate; backend authentication is the next security chunk");
 }
+
+const confirmed = read("confirmed.html");
+assertContains(confirmed, 'name="robots" content="noindex,nofollow"', "confirmation page is excluded from search indexing");
+assertNotContains(confirmed, "edu-booking-status", "confirmation page does not call an unversioned booking-status endpoint");
+assertNotContains(confirmed, "package_id", "confirmation page does not accept a package identifier in the URL");
+assertNotContains(confirmed, "meet_link", "confirmation page does not render private Meet links from client data");
 
 console.log("");
 if (failures.length > 0) {

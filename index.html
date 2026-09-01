@@ -1052,10 +1052,7 @@
       }
 
       if (data.mode === "comped") {
-        msg.className = "ok";
-        msg.textContent = "Booking confirmed at no charge. Confirmation email triggered.";
-        btn.style.display = "none";
-        await loadAvailability();
+        window.location.href = "confirmed.html?mode=comped";
       } else if (data.approveUrl) {
         msg.textContent = "Redirecting you to PayPal to complete Payment 1…";
         window.location.href = data.approveUrl;
@@ -1092,8 +1089,7 @@
       });
       const data = await res.json();
       if (res.ok && (data.status === "captured" || data.status === "already_captured")) {
-        banner.innerHTML = "✅ <strong>Payment received — you're booked!</strong><br>Sessions 1 & 2 are confirmed and calendar invites with Google Meet links are on the way. Each later installment covers the next two sessions.";
-        banner.style.borderColor = "#2dd4bf";
+        window.location.href = "confirmed.html?mode=paypal";
       } else {
         banner.textContent = "We couldn't confirm your payment automatically. If you completed payment on PayPal, don't worry — we'll reconcile it and email you. " + (data.error || "");
       }
