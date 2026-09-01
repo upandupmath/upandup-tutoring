@@ -166,8 +166,10 @@ assertContains(gitignore, ".env.*", "local environment files are ignored");
 assertContains(gitignore, "data.sql", "production data dump output is ignored");
 
 const index = read("index.html");
-assertContains(index, "const MAX_SESSIONS = 4;", "booking remains capped at four sessions");
-assertNotContains(index, "MAX_SESSIONS = 12", "legacy 12-session limit is absent");
+assertContains(index, "const MIN_SESSIONS = 4;", "booking retains the four-session minimum");
+assertContains(index, "const MAX_SESSIONS = 12;", "booking is capped at twelve sessions");
+assertContains(index, "chosenSessions.length % 2 !== 0", "booking requires complete two-session billing blocks");
+assertContains(index, "Choose 4–12 sessions in even two-session blocks", "pricing copy matches the booking policy");
 assertContains(
   index,
   "Booking is temporarily unavailable because live availability could not be confirmed.",
