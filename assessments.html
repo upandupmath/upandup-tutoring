@@ -45,7 +45,7 @@ h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.01em}
 .skill-chip{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:7px 16px 7px 10px;font-size:.82rem;font-weight:700;color:var(--ink)}
 .skill-chip .icon{width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
 label.field{display:block;font-weight:700;font-size:.85rem;margin-bottom:6px;color:var(--ink)}
-input[type=text],input[type=password]{width:100%;padding:14px 16px;font:inherit;font-weight:600;border:1px solid var(--line);border-radius:12px;background:var(--paper);margin-bottom:20px;color:var(--ink);font-size:.95rem}
+input[type=text],input[type=email]{width:100%;padding:14px 16px;font:inherit;font-weight:600;border:1px solid var(--line);border-radius:12px;background:var(--paper);margin-bottom:20px;color:var(--ink);font-size:.95rem}
 input:focus{outline:3px solid rgba(14,159,110,.35);border-color:var(--accent)}
 .btn{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;border:none;border-radius:99px;cursor:pointer;padding:14px 28px;background:linear-gradient(120deg,#F59E0B,#D97706);color:#3A2705;box-shadow:0 8px 24px -8px rgba(217,119,6,.4);transition:transform .1s ease}
 .btn:hover{transform:translateY(-1px)}
@@ -423,6 +423,9 @@ const BANKS = {
 };
 
 /* ===================== STATE ===================== */
+const ASSESSMENT_API_URL = "https://otdyhyzghaohnhtwzkvu.supabase.co/functions/v1/edu-assessment-auth";
+const ASSESSMENT_SESSION_KEY = "upandup-assessment-access-token";
+let assessmentToken = "";
 let authed = false;
 let grade = null;
 let state = {name:"",idx:0,answers:[],phase:"start"};
@@ -449,9 +452,68 @@ function drawProgress(){
 }
 
 /* ===================== SCREENS ===================== */
-function passwordScreen(){
-  authed=true;
-  gradePickerScreen();
+function teacherLoginScreen(message=""){
+  authed=false;grade=null;drawProgress();
+  screen.innerHTML=`
+    <div class="kicker">Teacher Access</div>
+    <div class="display">Sign in with your <em>approved email.</em></div>
+    <p class="lede">Enter your teacher email. If it is approved, we’ll send a one-time sign-in link.</p>
+    <label class="field" for="teacher-email">Teacher email</label>
+    <input type="email" id="teacher-email" autocomplete="email" maxlength="320" placeholder="you@example.com">
+    <div id="login-status" class="pw-error" role="status" aria-live="polite">${escapeHtml(message)}</div>
+    <button class="btn" id="loginBtn">Email me a sign-in link</button>`;
+  document.getElementById("loginBtn").addEventListener("click",requestTeacherLink);
+  document.getElementById("teacher-email").addEventListener("keydown",event=>{if(event.key==="Enter")requestTeacherLink()});
+}
+
+async function requestTeacherLink(){
+  const input=document.getElementById("teacher-email");
+  const button=document.getElementById("loginBtn");
+  const status=document.getElementById("login-status");
+  const email=input.value.trim();
+  if(!email){status.textContent="Enter your approved teacher email.";return}
+  button.disabled=true;button.textContent="Sending…";status.textContent="";
+  try{
+    const response=await fetch(ASSESSMENT_API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"request_link",email})
+    });
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||"The sign-in link could not be sent.");
+    status.style.color="var(--accent)";
+    status.textContent="If that email is approved, a one-time sign-in link is on the way.";
+  }catch(error){
+    status.textContent=error.message||"The sign-in link could not be sent. Please try again.";
+    button.disabled=false;button.textContent="Email me a sign-in link";
+  }
+}
+
+async function initializeTeacherAccess(){
+  const hash=new URLSearchParams(window.location.hash.slice(1));
+  const hashError=hash.get("error_description");
+  const returnedToken=hash.get("access_token");
+  if(returnedToken){
+    assessmentToken=returnedToken;
+    sessionStorage.setItem(ASSESSMENT_SESSION_KEY,returnedToken);
+    window.history.replaceState({},"",window.location.pathname);
+  }else{
+    assessmentToken=sessionStorage.getItem(ASSESSMENT_SESSION_KEY)||"";
+  }
+  if(hashError){teacherLoginScreen(hashError);return}
+  if(!assessmentToken){teacherLoginScreen();return}
+  try{
+    const response=await fetch(ASSESSMENT_API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":`Bearer ${assessmentToken}`},
+      body:JSON.stringify({action:"session"})
+    });
+    if(!response.ok)throw new Error("Your sign-in link has expired.");
+    authed=true;gradePickerScreen();
+  }catch(error){
+    assessmentToken="";sessionStorage.removeItem(ASSESSMENT_SESSION_KEY);
+    teacherLoginScreen(error.message||"Please sign in again.");
+  }
 }
 
 function gradePickerScreen(){
@@ -662,9 +724,6 @@ function resultsScreen(){
   emailLines.push("NEXT STEPS:");
   nextSteps.forEach(s => emailLines.push("  → " + s));
 
-  // Send report to Brother Truth's email via Apps Script
-  sendReportEmail(state.name, grade, pct, verdict, emailLines.join("\n"));
-
   const safeStudentName=escapeHtml(state.name);
   screen.innerHTML=`
     <div class="print-head"><h2>Up and Up Educational Services — ${B.title}</h2><p>Student: ${safeStudentName} · Date: ${today}</p></div>
@@ -705,35 +764,34 @@ function resultsScreen(){
       <button class="btn ghost sm" id="retakeBtn">Retake</button>
       <button class="btn ghost sm" id="gradeBtn">&larr; Other Grades</button>
     </div>`;
+  sendReportEmail(state.name, grade, pct, verdict, emailLines.join("\n"));
   document.getElementById("printBtn").addEventListener("click",()=>window.print());
   document.getElementById("retakeBtn").addEventListener("click",()=>{if(confirm("Clear all answers?")){stopTimer();timerStart=null;timerEnd=null;state={name:"",idx:0,answers:new Array(qs.length).fill(null),phase:"start"};startScreen()}});
   document.getElementById("gradeBtn").addEventListener("click",gradePickerScreen);
   window.scrollTo({top:0,behavior:"instant"});
 }
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMHiWO6YQmPQdlq2f9_YHSS-FWY-aKPbxitJcKrUS1_KXXFwjv37FI6c3fpqsfpOEI4Q/exec";
-
 async function sendReportEmail(studentName, gradeLevel, pct, verdict, reportText){
   const statusEl = document.getElementById("email-status");
   if(statusEl) statusEl.textContent = "Submitting report for delivery...";
+  if(!assessmentToken){
+    if(statusEl) statusEl.textContent = "Your teacher session expired — please print or save this report.";
+    return;
+  }
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(),10000);
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    const response=await fetch(ASSESSMENT_API_URL, {
       method: "POST",
-      mode: "no-cors",
-      referrerPolicy: "no-referrer",
       signal: controller.signal,
-      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      headers: {"Content-Type":"application/json","Authorization":`Bearer ${assessmentToken}`},
       body: JSON.stringify({
-        action: "assessmentReport",
-        studentName: studentName.slice(0,80),
-        gradeLevel: gradeLevel,
-        score: pct,
-        verdict: verdict,
-        report: reportText.slice(0,20000)
+        action:"report",
+        report:{studentName:studentName.slice(0,80),gradeLevel,score:pct,verdict,reportText:reportText.slice(0,20000)}
       })
     });
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||"Report delivery failed");
     if(statusEl) statusEl.textContent = "Report submitted for delivery";
   } catch(e){
     console.error("Report submission failed:", e);
@@ -743,7 +801,7 @@ async function sendReportEmail(studentName, gradeLevel, pct, verdict, reportText
   }
 }
 
-passwordScreen();
+initializeTeacherAccess();
 </script>
 </body>
 </html>
