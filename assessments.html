@@ -140,7 +140,7 @@ input:focus{outline:3px solid rgba(14,159,110,.35);border-color:var(--accent)}
 </div>
 
 <script>
-const AUTH_URL = "https://otdyhyzghaohnhtwzkvu.supabase.co/functions/v1/edu-check-assessment";
+
 
 function escapeHtml(value){
   return String(value).replace(/[&<>"']/g,ch=>({
@@ -450,35 +450,8 @@ function drawProgress(){
 
 /* ===================== SCREENS ===================== */
 function passwordScreen(){
-  pbar.innerHTML="";
-  screen.innerHTML=`
-    <div class="kicker">Instructor Access</div>
-    <div class="display">Student <em>Assessments</em></div>
-    <p class="lede">These placement assessments are for registered Up and Up Educational Services students. Enter the access code provided by Brother Truth to continue.</p>
-    <label class="field" for="pw">Access Code</label>
-    <input type="password" id="pw" placeholder="Enter access code">
-    <div class="pw-error" id="pw-err"></div>
-    <button type="button" class="btn" id="pwBtn">Continue</button>
-  `;
-  document.getElementById("pwBtn").addEventListener("click",checkPw);
-  document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")checkPw()});
-}
-
-async function checkPw(){
-  const v=document.getElementById("pw").value.trim();
-  const btn=document.getElementById("pwBtn");
-  const err=document.getElementById("pw-err");
-  if(!v){err.textContent="Please enter the access code.";return;}
-  btn.disabled=true;btn.textContent="Checking…";err.textContent="";
-  try{
-    const res=await fetch(AUTH_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:v})});
-    const data=await res.json();
-    if(res.ok&&data.valid){authed=true;gradePickerScreen()}
-    else{err.textContent="Incorrect access code. Please try again.";btn.disabled=false;btn.textContent="Continue";}
-  }catch(e){
-    err.textContent="Could not verify — check your connection and try again.";
-    btn.disabled=false;btn.textContent="Continue";
-  }
+  authed=true;
+  gradePickerScreen();
 }
 
 function gradePickerScreen(){
