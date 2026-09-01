@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scroll-behavior:smooth;">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,6 +45,34 @@
     border-bottom:1px solid rgba(255,255,255,0.07);
   }
   nav .container{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;}
+  .nav-links{display:flex;gap:6px;align-items:center;}
+  .nav-link{
+    color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:500;
+    text-decoration:none;padding:6px 12px;border-radius:8px;
+    transition:color 0.15s, background 0.15s;
+  }
+  .nav-link:hover{color:#fff;background:rgba(255,255,255,0.08);}
+  .nav-right{display:flex;align-items:center;gap:12px;}
+  .hamburger{
+    display:none;background:none;border:none;cursor:pointer;padding:6px;
+    flex-direction:column;gap:4px;
+  }
+  .hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:0.2s;}
+  @media(max-width:800px){
+    .nav-links{
+      display:none;position:absolute;top:100%;left:0;right:0;
+      background:rgba(13,21,38,0.97);backdrop-filter:blur(12px);
+      flex-direction:column;padding:12px 24px 18px;gap:2px;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    .nav-links.open{display:flex;}
+    .nav-link{padding:12px 16px;font-size:0.92rem;width:100%;border-radius:10px;}
+    .nav-link:hover{background:rgba(255,255,255,0.06);}
+    .hamburger{display:flex;}
+    .hamburger.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px);}
+    .hamburger.open span:nth-child(2){opacity:0;}
+    .hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px);}
+  }
   .brand{color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1rem;display:flex;align-items:center;gap:10px;}
   .brand-mark{
     width:30px;height:30px;border-radius:8px;background:var(--grad);
@@ -332,7 +360,19 @@
       </div>
       Up And Up <span>&nbsp;Educational Services</span>
     </div>
-    <a href="#register" class="nav-cta">Book Now</a>
+    <div class="nav-links" id="nav-links">
+      <a href="#about" class="nav-link">About</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="placement.html" class="nav-link">Placement Test</a>
+    </div>
+    <div class="nav-right">
+      <a href="#register" class="nav-cta">Book Now</a>
+      <button type="button" class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </nav>
 
@@ -990,16 +1030,11 @@
 
       if (data.mode === "comped") {
         msg.className = "ok";
-        msg.textContent = "Confirmed! Redirecting…";
-        window.location.href = "confirmed.html?package_id=" + data.package_id + "&mode=comped";
-        return true;
-      } else if (data.mode === "invoice") {
-        msg.className = "ok";
-        msg.textContent = "Invoice sent! Redirecting…";
-        window.location.href = "confirmed.html?package_id=" + data.package_id + "&mode=invoice";
-        return true;
+        msg.textContent = "Booking confirmed at no charge. Confirmation email triggered.";
+        btn.style.display = "none";
+        await loadAvailability();
       } else if (data.approveUrl) {
-        msg.textContent = "Redirecting you to PayPal…";
+        msg.textContent = "Redirecting you to PayPal to complete Payment 1…";
         window.location.href = data.approveUrl;
       } else {
         msg.textContent = "Booking created but no payment link was returned. Please contact us.";
@@ -1034,10 +1069,8 @@
       });
       const data = await res.json();
       if (res.ok && (data.status === "captured" || data.status === "already_captured")) {
-        banner.textContent = "Payment confirmed! Redirecting…";
+        banner.innerHTML = "✅ <strong>Payment received — you're booked!</strong><br>Sessions 1 & 2 are confirmed and calendar invites with Google Meet links are on the way. Your next $130 is charged after session 2, for sessions 3 & 4.";
         banner.style.borderColor = "#2dd4bf";
-        window.location.href = "confirmed.html?package_id=" + data.package_id + "&mode=paid";
-        return;
       } else {
         banner.textContent = "We couldn't confirm your payment automatically. If you completed payment on PayPal, don't worry — we'll reconcile it and email you. " + (data.error || "");
       }
@@ -1048,6 +1081,18 @@
     window.history.replaceState({}, "", window.location.pathname);
     setTimeout(() => banner.remove(), 15000);
   }
+
+  // Nav hamburger toggle
+  document.getElementById('hamburger').addEventListener('click', function(){
+    this.classList.toggle('open');
+    document.getElementById('nav-links').classList.toggle('open');
+  });
+  document.querySelectorAll('.nav-link').forEach(function(link){
+    link.addEventListener('click', function(){
+      document.getElementById('hamburger').classList.remove('open');
+      document.getElementById('nav-links').classList.remove('open');
+    });
+  });
 
   renderDayNames();
   renderCalendar();
