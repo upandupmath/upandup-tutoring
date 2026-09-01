@@ -3,1052 +3,216 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Up And Up Educational Services — Virtual Math Tutoring</title>
+<title>You're Booked — Up And Up Educational Services</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F7F5F0;
-    --ink:#1F2937;
-    --navy:#0B1E3A;
-    --navy-2:#122B4F;
-    --accent:#0E9F6E;
-    --accent-2:#134E4A;
-    --teal:#34D399;
-    --amber:#F59E0B;
-    --amber-deep:#D97706;
-    --amber-ink:#3A2705;
-    --good-bg:#D1FAE5;
-    --muted:#5b6472;
-    --line:#e4e7ee;
-    --card:#ffffff;
+    --bg:#F7F5F0;--ink:#1F2937;--navy:#0B1E3A;--navy-2:#122B4F;
+    --accent:#0E9F6E;--teal:#34D399;--amber:#D97706;
+    --good-bg:#D1FAE5;--muted:#5b6472;--line:#e4e7ee;--card:#ffffff;
     --grad:linear-gradient(120deg,#0E9F6E,#134E4A);
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;}
-  body{
-    font-family:'Inter',sans-serif;
-    color:var(--ink);
-    background:var(--bg);
-    line-height:1.65;
-  }
-  h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em;}
-  a{color:inherit;}
-  .container{max-width:1040px;margin:0 auto;padding:0 24px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
 
-  /* ---------- NAV ---------- */
-  nav{
-    position:sticky;top:0;z-index:50;
-    background:rgba(13,21,38,0.92);
-    backdrop-filter:blur(10px);
-    border-bottom:1px solid rgba(255,255,255,0.07);
-  }
-  nav .container{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;}
-  .brand{color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1rem;display:flex;align-items:center;gap:10px;}
-  .brand-mark{
-    width:30px;height:30px;border-radius:8px;background:var(--grad);
-    display:flex;align-items:center;justify-content:center;
-  }
-  .brand-mark svg{width:16px;height:16px;}
-  .brand span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
-  .nav-cta{
-    background:var(--grad);color:#fff;
-    padding:10px 20px;border-radius:99px;font-weight:600;font-size:0.88rem;
-    text-decoration:none;
-  }
+  .topbar{background:var(--navy);padding:18px 28px;display:flex;align-items:center;gap:12px;}
+  .topbar .logo{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:16px;}
+  .topbar .brand{color:#fff;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:600;}
+  .topbar .brand span{color:var(--teal);}
 
-  /* ---------- HERO ---------- */
-  .hero{
-    background:var(--navy);
-    color:#fff;
-    position:relative;overflow:hidden;
-    padding:88px 0 104px;
-  }
-  .hero::before{
-    content:"";position:absolute;inset:0;
-    background:
-      radial-gradient(600px 300px at 85% 20%, rgba(52,211,153,0.16), transparent 70%),
-      radial-gradient(500px 300px at 10% 90%, rgba(14,159,110,0.14), transparent 70%);
-    pointer-events:none;
-  }
-  .hero .container{display:grid;grid-template-columns:1.15fr 0.85fr;gap:56px;align-items:center;position:relative;}
-  .eyebrow{
-    display:inline-block;
-    font-size:0.78rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
-    color:var(--teal);
-    border:1px solid rgba(45,212,191,0.35);
-    padding:6px 14px;border-radius:99px;margin-bottom:20px;
-  }
-  .hero h1{font-size:2.7rem;font-weight:700;line-height:1.12;margin-bottom:18px;}
-  .hero h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
-  .hero p.lead{font-size:1.06rem;color:rgba(255,255,255,0.72);margin-bottom:30px;max-width:48ch;}
-  .btn-row{display:flex;gap:14px;flex-wrap:wrap;}
-  .btn-primary{
-    background:var(--grad);color:#fff;
-    padding:14px 28px;border-radius:99px;font-weight:600;text-decoration:none;
-    font-size:0.98rem;display:inline-block;
-    box-shadow:0 8px 24px -8px rgba(217,119,6,0.45);
-  }
-  .btn-secondary{
-    border:1px solid rgba(255,255,255,0.25);color:#fff;
-    padding:14px 28px;border-radius:99px;text-decoration:none;font-size:0.98rem;
-  }
+  .hero{background:var(--navy);padding:48px 28px 56px;text-align:center;}
+  .hero .check{width:72px;height:72px;background:var(--good-bg);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;}
+  .hero .check svg{width:36px;height:36px;stroke:var(--accent);stroke-width:3;fill:none;}
+  .hero h1{color:#fff;font-size:1.65rem;margin-bottom:8px;letter-spacing:-0.01em;}
+  .hero p{color:rgba(255,255,255,0.65);font-size:0.95rem;max-width:480px;margin:0 auto;}
 
-  /* growth-line hero graphic */
-  .growth-box{display:flex;align-items:center;justify-content:center;}
-  .growth-card{
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:20px;padding:26px;width:100%;max-width:360px;
-    backdrop-filter:blur(6px);
-  }
-  .growth-card .gc-label{font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px;}
-  .growth-card .gc-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.05rem;margin-bottom:16px;}
-  #growth-svg .gline{
-    fill:none;stroke:url(#gradLine);stroke-width:3.5;stroke-linecap:round;
-    stroke-dasharray:600;stroke-dashoffset:600;animation:rise 2.4s ease forwards 0.3s;
-  }
-  #growth-svg .dot{fill:#2dd4bf;opacity:0;animation:pop .4s ease forwards 2.5s;}
-  #growth-svg .grid{stroke:rgba(255,255,255,0.08);stroke-width:1;}
-  @keyframes rise{to{stroke-dashoffset:0;}}
-  @keyframes pop{to{opacity:1;}}
-  @media (prefers-reduced-motion:reduce){
-    #growth-svg .gline{animation:none;stroke-dashoffset:0;}
-    #growth-svg .dot{animation:none;opacity:1;}
-  }
-  .gc-stats{display:flex;gap:18px;margin-top:16px;}
-  .gc-stat{font-size:0.8rem;color:rgba(255,255,255,0.6);}
-  .gc-stat strong{display:block;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:1.05rem;}
+  .content{max-width:640px;width:100%;margin:-32px auto 0;padding:0 16px 60px;position:relative;z-index:1;}
 
-  /* ---------- SECTION shared ---------- */
-  section{padding:80px 0;}
-  .section-label{
-    font-size:0.78rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
-    color:var(--accent);margin-bottom:10px;
-  }
-  h2{font-size:1.9rem;margin-bottom:14px;}
-  .lead-muted{color:var(--muted);max-width:62ch;margin-bottom:36px;}
+  .card{background:var(--card);border-radius:16px;border:1px solid var(--line);overflow:hidden;margin-bottom:20px;}
+  .card-header{padding:16px 22px;background:#F9FAFB;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
+  .card-header .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .card-header .icon svg{width:16px;height:16px;stroke-width:2;fill:none;}
+  .card-header h3{font-size:0.82rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);}
+  .card-body{padding:20px 22px;}
 
-  /* ---------- ABOUT ---------- */
-  #about{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .about-grid{display:grid;grid-template-columns:260px 1fr;gap:36px;align-items:start;}
-  .photo-wrap{
-    width:100%;border-radius:20px;overflow:hidden;
-    position:relative;
-    box-shadow:0 16px 40px -16px rgba(14,159,110,0.28);
+  .session-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);}
+  .session-row:last-child{border-bottom:none;}
+  .session-row .num{font-weight:600;font-size:0.95rem;color:var(--ink);}
+  .session-row .date{color:var(--muted);font-size:0.85rem;margin-top:2px;}
+  .session-row .meet-btn{
+    background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:0.78rem;
+    padding:7px 14px;border-radius:8px;white-space:nowrap;transition:background 0.15s;
   }
-  .photo-wrap img{width:100%;height:auto;display:block;}
-  .photo-wrap::after{
-    content:"";position:absolute;bottom:0;left:0;right:0;height:40%;
-    background:linear-gradient(to top,rgba(13,21,38,0.5),transparent);
-    pointer-events:none;
-  }
-  .badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
-  .badge{
-    background:var(--bg);border:1px solid var(--line);
-    padding:6px 14px;border-radius:99px;font-size:0.8rem;font-weight:500;
-    color:var(--ink);
-  }
-  @media (max-width:840px){
-    .about-grid{grid-template-columns:1fr;}
-    .photo-wrap{max-width:300px;}
-  }
+  .session-row .meet-btn:hover{background:#0b8a5e;}
+  .session-row .pending{color:var(--muted);font-size:0.78rem;font-style:italic;}
 
-  /* ---------- HOW IT WORKS ---------- */
-  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-  .step{
-    background:var(--card);border:1px solid var(--line);border-radius:16px;
-    padding:22px;transition:transform .15s ease, box-shadow .15s ease;
-  }
-  .step:hover{transform:translateY(-3px);box-shadow:0 12px 28px -14px rgba(16,24,39,0.18);}
-  .step .num{
-    width:32px;height:32px;border-radius:10px;background:var(--grad);color:#fff;
-    display:flex;align-items:center;justify-content:center;
-    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.85rem;margin-bottom:12px;
-  }
-  .step h3{font-size:1rem;margin-bottom:6px;}
-  .step p{font-size:0.88rem;color:var(--muted);}
+  .billing-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:0.9rem;}
+  .billing-row:last-child{border-bottom:none;}
+  .billing-row .label{color:var(--muted);}
+  .billing-row .val{font-weight:600;}
+  .billing-row .paid{color:var(--accent);}
+  .billing-row .upcoming{color:var(--amber);}
 
-  /* ---------- PRICING ---------- */
-  #pricing{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .pricing-card{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:20px;padding:38px;max-width:540px;
-    box-shadow:0 20px 44px -24px rgba(14,159,110,0.22);
-    position:relative;
-  }
-  .pricing-card::before{
-    content:"";position:absolute;top:0;left:0;right:0;height:5px;
-    background:var(--grad);border-radius:20px 20px 0 0;
-  }
-  .price-row{display:flex;align-items:baseline;gap:10px;margin:6px 0 4px;}
-  .price-big{font-family:'Space Grotesk',sans-serif;font-size:2.7rem;font-weight:700;color:var(--ink);}
-  .price-was{color:var(--muted);text-decoration:line-through;font-size:1.1rem;}
-  .price-unit{color:var(--muted);font-size:0.95rem;}
-  .pricing-card ul{list-style:none;margin:20px 0 24px;}
-  .pricing-card li{padding:8px 0;font-size:0.94rem;display:flex;gap:10px;align-items:flex-start;}
-  .pricing-card li::before{
-    content:"✓";color:var(--teal);font-weight:700;flex-shrink:0;
-  }
-  .promo-row{display:flex;gap:10px;margin-bottom:16px;}
-  .promo-row input{
-    flex:1;padding:12px 16px;border:1px solid var(--line);border-radius:12px;
-    font-family:'Inter',sans-serif;font-size:0.9rem;
-  }
-  .promo-row button{
-    background:var(--navy);color:#fff;border:none;
-    padding:0 22px;border-radius:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
-  }
-  #promo-msg{font-size:0.85rem;min-height:1.2em;margin-bottom:14px;font-weight:500;}
-  #promo-msg.ok{color:#0d9488;}
-  #promo-msg.bad{color:#dc2626;}
-  .total-line{display:flex;justify-content:space-between;border-top:1px dashed var(--line);padding-top:16px;font-weight:600;}
+  .prep{background:#EEF6FF;border:1px solid #C8DDF5;border-radius:12px;padding:18px 20px;margin-top:4px;}
+  .prep h4{font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#1a4a7a;margin-bottom:10px;}
+  .prep ul{margin:0;padding-left:18px;font-size:0.88rem;line-height:2;color:var(--ink);}
 
-  /* ---------- POLICIES ---------- */
-  .policy-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-  .policy-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;}
-  .policy-card h3{font-size:1rem;margin-bottom:8px;}
-  .policy-card p{font-size:0.9rem;color:var(--muted);}
+  .cta-row{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+  .cta{flex:1;min-width:200px;text-align:center;padding:14px 20px;border-radius:12px;font-weight:600;font-size:0.9rem;text-decoration:none;transition:opacity 0.15s;}
+  .cta-primary{background:var(--grad);color:#fff;}
+  .cta-secondary{background:transparent;border:1.5px solid var(--line);color:var(--ink);}
+  .cta:hover{opacity:0.88;}
 
-  /* ---------- FAQ ---------- */
-  #faq{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  details{border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:12px;background:var(--card);}
-  summary{cursor:pointer;font-weight:600;font-size:0.98rem;list-style:none;display:flex;justify-content:space-between;align-items:center;}
-  summary::-webkit-details-marker{display:none;}
-  summary::after{content:"+";color:var(--accent);font-size:1.35rem;font-weight:400;}
-  details[open] summary::after{content:"–";}
-  details p{margin-top:10px;color:var(--muted);font-size:0.92rem;}
+  .footer{margin-top:auto;background:var(--navy-2);padding:24px 28px;text-align:center;}
+  .footer p{font-size:0.78rem;color:rgba(255,255,255,0.45);}
+  .footer a{color:var(--teal);text-decoration:none;}
 
-  /* ---------- REGISTER FORM ---------- */
-  .register-wrap{
-    background:var(--navy);color:#fff;border-radius:24px;padding:48px;
-    position:relative;overflow:hidden;
-  }
-  .register-wrap::before{
-    content:"";position:absolute;inset:0;
-    background:radial-gradient(500px 260px at 90% 10%, rgba(52,211,153,0.18), transparent 70%);
-    pointer-events:none;
-  }
-  .register-wrap > *{position:relative;}
-  .register-wrap h2{color:#fff;}
-  .register-wrap .lead-muted{color:rgba(255,255,255,0.68);}
-  .register-wrap .section-label{color:var(--teal);}
-  form{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;}
-  form .full{grid-column:1 / -1;}
-  form label{font-size:0.78rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:rgba(255,255,255,0.65);display:block;margin-bottom:7px;}
-  form input,form select,form textarea{
-    width:100%;padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.18);
-    background:rgba(255,255,255,0.06);color:#fff;font-family:'Inter',sans-serif;font-size:0.94rem;
-  }
-  form select option{color:var(--ink);}
-  form input::placeholder,form textarea::placeholder{color:rgba(255,255,255,0.35);}
-  form button[type=submit]{
-    grid-column:1/-1;background:var(--grad);color:#fff;border:none;
-    padding:16px;border-radius:99px;font-weight:600;font-size:1rem;cursor:pointer;margin-top:6px;
-    font-family:'Inter',sans-serif;
-    box-shadow:0 8px 24px -8px rgba(217,119,6,0.4);
-  }
-  #form-msg{grid-column:1/-1;font-size:0.88rem;font-weight:500;color:var(--teal);}
+  #loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:0.95rem;}
+  #error-state{display:none;text-align:center;padding:40px 20px;}
+  #error-state p{color:#B91C1C;font-size:0.95rem;margin-bottom:16px;}
 
-  /* ---------- CALENDAR WIDGET ---------- */
-  .calendar-widget{
-    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-    border-radius:16px;padding:16px;
+  @media(max-width:500px){
+    .hero h1{font-size:1.3rem;}
+    .cta-row{flex-direction:column;}
   }
-  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.92rem;color:#fff;}
-  .cal-nav{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;border-radius:10px;width:30px;height:30px;cursor:pointer;padding:0;font-size:0.9rem;}
-  .cal-nav:disabled{opacity:0.3;cursor:not-allowed;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-  #cal-daynames{margin-bottom:8px;font-size:0.68rem;font-weight:600;letter-spacing:0.05em;color:rgba(255,255,255,0.45);text-align:center;text-transform:uppercase;}
-  .cal-day{
-    display:flex;flex-direction:column;gap:2px;padding:4px 3px;
-    border-radius:9px;color:#fff;background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.07);
-  }
-  .cal-daynum{font-size:0.7rem;font-weight:600;text-align:center;opacity:.75;}
-  /* weekends keep their box but hold no times */
-  .cal-day.noslots{justify-content:flex-start;}
-  .cal-day.blank{visibility:hidden;}
-  .cal-day.disabled{background:none;border-color:transparent;}
-  .cal-day.disabled .cal-daynum{color:rgba(255,255,255,0.18);}
-  /* one tappable time chip per slot, printed right on the date */
-  .cal-slot{
-    display:flex;align-items:center;justify-content:center;
-    font-size:0.6rem;font-weight:600;line-height:1;padding:4px 0;
-    border-radius:5px;border:1px solid rgba(255,255,255,0.16);
-    background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;
-    font-family:'Inter',sans-serif;width:100%;letter-spacing:-0.02em;
-  }
-  .cal-slot:hover{background:rgba(14,159,110,0.35);border-color:rgba(14,159,110,0.6);}
-  .cal-slot.added{background:rgba(52,211,153,0.22);border-color:rgba(52,211,153,0.65);color:#6ee7b7;}
-  .cal-slot.added:hover{background:rgba(248,113,113,0.22);border-color:rgba(248,113,113,0.6);color:#fca5a5;}
-  .cal-slot.taken{opacity:.28;cursor:not-allowed;text-decoration:line-through;}
-  .cal-slot.taken:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);}
-  .cal-slot:disabled{cursor:not-allowed;}
-  @media(max-width:560px){
-    .cal-grid{gap:3px;}
-    .cal-slot{font-size:0.52rem;padding:3px 0;border-radius:4px;}
-    .cal-day{padding:3px 2px;gap:2px;}
-    .cal-daynum{font-size:0.62rem;}
-  }
-
-  footer{padding:40px 0;color:var(--muted);font-size:0.85rem;text-align:center;}
-
-  @media (max-width:840px){
-    .hero .container{grid-template-columns:1fr;}
-    .hero h1{font-size:2.1rem;}
-    .steps{grid-template-columns:1fr 1fr;}
-    .policy-grid{grid-template-columns:1fr;}
-    form{grid-template-columns:1fr;}
-    .about-grid{grid-template-columns:1fr;}
-    .register-wrap{padding:32px 22px;}
-  }
-
-  /* ===== ASCENT palette overrides ===== */
-  .nav-cta,.btn-primary,form button[type=submit],.btn{
-    background:linear-gradient(120deg,#F59E0B,#D97706);
-    color:var(--amber-ink);
-    font-weight:700;
-    box-shadow:0 8px 24px -8px rgba(217,119,6,0.5);
-  }
-  .nav-cta:hover,.btn-primary:hover,form button[type=submit]:hover,.btn:hover{filter:brightness(1.05);}
-  .btn{font-family:'Space Grotesk',sans-serif;font-weight:600;border:none;border-radius:99px;cursor:pointer;display:inline-block;}
-  .eyebrow{color:var(--teal);border-color:rgba(52,211,153,0.4);}
-  .promo-row button{background:var(--navy);}
-  .gc-stats .gc-stat strong{color:var(--teal);}
-  .section-label{color:var(--accent);}
-  .step .num{background:var(--grad);}
-  .choice.picked{border-color:var(--accent);}
 </style>
 </head>
 <body>
+<div class="topbar">
+  <div class="logo">↗</div>
+  <div class="brand">Up And Up <span>Educational Services</span></div>
+</div>
 
-<nav>
-  <div class="container">
-    <div class="brand">
-      <div class="brand-mark">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 18 L10 11 L14 14 L20 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6 H20 V11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      Up And Up <span>&nbsp;Educational Services</span>
-    </div>
-    <a href="#register" class="nav-cta">Book Now</a>
+<div class="hero">
+  <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <h1 id="hero-title">You're booked!</h1>
+  <p id="hero-sub">Your sessions are confirmed. Check your email for details and Google Meet links.</p>
+  <div id="hero-dates" style="margin-top:22px;display:inline-flex;flex-direction:column;gap:8px;text-align:left;"></div>
+</div>
+
+<div class="content">
+  <div id="loading">Loading your booking details…</div>
+  <div id="error-state">
+    <p>We couldn't load your booking details, but your sessions are confirmed.</p>
+    <a href="https://upandupmath.github.io/upandup-tutoring/" class="cta cta-primary" style="display:inline-block;">Return to site</a>
   </div>
-</nav>
+  <div id="details" style="display:none;">
 
-<header class="hero">
-  <div class="container">
-    <div>
-      <div class="eyebrow">1 of only 8 D.C. BrightSpot Fellows · Grades 6–10</div>
-      <h1>Math tutoring that keeps your child <em>constantly elevating.</em></h1>
-      <p class="lead">One-on-one virtual sessions over Google Meet with veteran classroom teacher Brother Truth — focused on exactly what your child is stuck on, from middle school math through Geometry. Always on the up and up.</p>
-      <div class="btn-row">
-        <a href="#pricing" class="btn-primary">See Pricing</a>
-        <a href="#how-it-works" class="btn-secondary">How It Works</a>
+    <div class="card">
+      <div class="card-header">
+        <div class="icon" style="background:var(--good-bg);"><svg viewBox="0 0 24 24" stroke="var(--accent)"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <h3>Your sessions</h3>
       </div>
+      <div class="card-body" id="sessions-list"></div>
     </div>
-    <div class="growth-box">
-      <div class="growth-card">
-        <div class="gc-label">Student Progress</div>
-        <div class="gc-title">Confidence, session by session</div>
-        <svg id="growth-svg" viewBox="0 0 300 160" width="100%">
-          <defs>
-            <linearGradient id="gradLine" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0" stop-color="#34D399"/>
-              <stop offset="1" stop-color="#0E9F6E"/>
-            </linearGradient>
-          </defs>
-          <line class="grid" x1="0" y1="40" x2="300" y2="40"/>
-          <line class="grid" x1="0" y1="80" x2="300" y2="80"/>
-          <line class="grid" x1="0" y1="120" x2="300" y2="120"/>
-          <path class="gline" d="M10 140 L70 118 L130 122 L190 78 L250 60 L290 26"/>
-          <circle class="dot" cx="290" cy="26" r="6"/>
-        </svg>
-        <div class="gc-stats">
-          <div class="gc-stat"><strong>1-on-1</strong>Every session</div>
-          <div class="gc-stat"><strong>60 min</strong>Session length</div>
-          <div class="gc-stat"><strong>M–F</strong>4–7 PM</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
 
-<div style="background:var(--navy-2);border-top:1px solid rgba(255,255,255,0.06);">
-  <div class="container" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px 34px;padding:18px 24px;color:rgba(255,255,255,0.75);font-size:0.85rem;font-weight:600;text-align:center;">
-    <span>20+ Years Teaching</span>
-    <span style="color:var(--teal)">•</span>
-    <span>Ron Brown College Prep</span>
-    <span style="color:var(--teal)">•</span>
-    <span>Morgan State Graduate</span>
-    <span style="color:var(--teal)">•</span>
-    <span>EmpowerK12 BrightSpot Fellow</span>
+    <div class="card">
+      <div class="card-header">
+        <div class="icon" style="background:#FEF3C7;"><svg viewBox="0 0 24 24" stroke="var(--amber)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h3>Billing</h3>
+      </div>
+      <div class="card-body" id="billing-info"></div>
+    </div>
+
+    <div class="prep">
+      <h4>Before each session</h4>
+      <ul>
+        <li>Join the Meet link a few minutes early</li>
+        <li>Have paper, a pencil, and a calculator ready</li>
+        <li>Bring the actual homework, quiz, or notes causing trouble</li>
+        <li>A quiet spot and a steady connection make a big difference</li>
+      </ul>
+    </div>
+
+    <div class="cta-row">
+      <a href="https://upandupmath.github.io/upandup-tutoring/" class="cta cta-secondary">← Back to site</a>
+      <a href="https://upandupmath.github.io/upandup-tutoring/placement.html" class="cta cta-primary">Take the placement test</a>
+    </div>
   </div>
 </div>
 
-<section id="about">
-  <div class="container about-grid">
-    <div class="photo-wrap">
-      <img src="teaching.jpg" alt="Brother Truth working with students in the classroom">
-    </div>
-    <div>
-      <div class="section-label">About Your Tutor</div>
-      <h2>Meet Brother Truth</h2>
-      <p class="lead-muted" style="margin-bottom:4px;font-weight:700;color:var(--ink);">
-        Founder, Up And Up Educational Services
-      </p>
-      <p class="lead-muted" style="margin-bottom:14px;">
-        Brother Truth is a veteran mathematics educator with more than two decades of classroom experience across Washington, D.C. and Maryland public schools. He currently teaches Geometry and Algebra I full-time at Ron Brown College Preparatory High School — the only all-male public high school in the District — and was selected for EmpowerK12's inaugural BrightSpot Fellowship — a cohort of just eight teachers across the District recognized for measurable student achievement. Of those eight, four were chosen from D.C. Public Charter Schools and four from D.C. Public Schools. Brother Truth was one of only two high school teachers selected.
-      </p>
-      <p class="lead-muted" style="margin-bottom:14px;">
-        A graduate of Morgan State University, he has taught in D.C. Public Schools, public charter schools, and Prince George's County Public Schools — reaching students at every level of confidence, from the ones who love math to the ones who dread it. Beyond the classroom, he has spent years running youth enrichment programs across the region, building a teaching style that meets students where they are and moves them forward.
-      </p>
-      <p class="lead-muted" style="margin-bottom:0;">
-        Up And Up Educational Services brings that same classroom-tested instruction into focused, one-on-one virtual sessions for students in grades 6 through 10.
-      </p>
-      <div class="badge-row">
-        <div class="badge">Grades 6–10</div>
-        <div class="badge">Middle School Math</div>
-        <div class="badge">Pre-Algebra</div>
-        <div class="badge">Algebra I</div>
-        <div class="badge">Geometry</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="how-it-works">
-  <div class="container">
-    <div class="section-label">The Process</div>
-    <h2>How it works</h2>
-    <p class="lead-muted">Five steps, start to finish.</p>
-    <div class="steps" style="grid-template-columns:repeat(5,1fr);">
-      <div class="step">
-        <div class="num">1</div>
-        <h3>Register</h3>
-        <p>Tell us your child's grade level and what topic they need help with.</p>
-      </div>
-      <div class="step">
-        <div class="num">2</div>
-        <h3>Placement Test</h3>
-        <p>Your child takes a 30-question readiness assessment so we know exactly where to start.</p>
-      </div>
-      <div class="step">
-        <div class="num">3</div>
-        <h3>Custom Plan</h3>
-        <p>Based on the assessment results, we build a tutoring schedule and outline tailored to your child's needs — 1 to 3 sessions per week.</p>
-      </div>
-      <div class="step">
-        <div class="num">4</div>
-        <h3>Book and Pay</h3>
-        <p>Pick your times (4-session minimum), then pay for your first two sessions. Everything after that is billed two sessions at a time, as you go.</p>
-      </div>
-      <div class="step">
-        <div class="num">5</div>
-        <h3>Meet on Google Meet</h3>
-        <p>A unique Meet link is generated and emailed to both the parent and student before each session.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="pricing">
-  <div class="container">
-    <div class="section-label">Pricing</div>
-    <h2>Simple, one-rate pricing.</h2>
-    <p class="lead-muted">No tiers to compare. Book one four-session package and pay two sessions at a time — never more than two sessions in advance. Handled through PayPal, and we accept all major credit cards.</p>
-
-    <div class="pricing-card">
-      <div class="price-row">
-        <span class="price-big" id="price-display">$65</span>
-        <span class="price-unit">/ session</span>
-        <span class="price-was" id="was-price" style="display:none;">$65</span>
-      </div>
-      <ul>
-        <li>Four-session package — select exactly four session times</li>
-        <li>60-minute 1-on-1 sessions, 100% virtual on Google Meet</li>
-        <li>Monday–Friday, 4:00–7:00 PM — calendar booking synced automatically</li>
-        <li>Grades 6–10 · middle school math through Geometry</li>
-        <li>Billed $130 at a time (2 sessions) — never pay weeks ahead</li>
-        <li>Invoiced through PayPal · Visa, Mastercard, Amex, Discover accepted</li>
-      </ul>
-
-      <div class="promo-row">
-        <input type="text" id="promo-input" aria-label="Discount code" placeholder="Discount code">
-        <button type="button" onclick="applyPromo()">Apply</button>
-      </div>
-      <div id="promo-msg" role="status" aria-live="polite"></div>
-
-      <div class="total-line" style="border-top:none;padding-top:0;flex-direction:column;gap:8px;align-items:stretch;">
-        <div style="display:flex;justify-content:space-between;font-weight:400;color:var(--muted);font-size:0.92rem;">
-          <span>Due today — sessions 1 &amp; 2</span>
-          <span id="payment1-display">$130</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-weight:400;color:var(--muted);font-size:0.92rem;">
-          <span>Then $130 after every 2 sessions</span>
-          <span id="payment2-display">$130</span>
-        </div>
-      </div>
-      <div class="total-line">
-        <span>Package total (paid over time)</span>
-        <span id="total-display">$260</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="policies">
-  <div class="container">
-    <div class="section-label">Good to Know</div>
-    <h2>Policies</h2>
-    <p class="lead-muted"></p>
-    <div class="policy-grid">
-      <div class="policy-card">
-        <h3>The 4-session minimum &amp; how billing works</h3>
-        <p>Every sign-up books exactly four sessions — enough runway to make meaningful progress without paying for the full package up front. You pay $130 for sessions 1 and 2 when you book. The remaining $130 covers sessions 3 and 4 and is charged according to the payment authorization completed through PayPal.</p>
-      </div>
-      <div class="policy-card">
-        <h3>Rescheduling</h3>
-        <p>Life happens. Reschedule any session with at least 24 hours' notice through the calendar link in your confirmation email, at no charge.</p>
-      </div>
-      <div class="policy-card">
-        <h3>Missed sessions</h3>
-        <p>Sessions missed without 24 hours' notice count toward your booked sessions and are billed as normal, since that time was held exclusively for your child.</p>
-      </div>
-      <div class="policy-card">
-        <h3>Virtual only</h3>
-        <p>All sessions take place over Google Meet. A unique meeting link is generated and emailed to both the parent and the student (if a student email is provided) ahead of every booked session.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="container">
-    <div class="section-label">FAQ</div>
-    <h2>Questions parents ask</h2>
-    <details open>
-      <summary>What if my child only needs help with one topic?</summary>
-      <p>That's the most common reason families sign up. The 4-session minimum gives enough time to actually close the gap on one unit or skill, rather than a single session that only scratches the surface — and you pay for it two sessions at a time, so it isn't a large commitment up front.</p>
-    </details>
-    <details>
-      <summary>What grade levels do you cover?</summary>
-      <p>Grades 6 through 10 — from middle school math and Pre-Algebra through Algebra I and Geometry.</p>
-    </details>
-    <details>
-      <summary>How does payment work?</summary>
-      <p>The four-session package is paid in two parts. $130 covers sessions 1 and 2 and is paid when you book. The remaining $130 covers sessions 3 and 4 and is charged using the payment authorization completed through PayPal. Visa, Mastercard, Amex and Discover are accepted; no PayPal account is required.</p>
-    </details>
-    <details>
-      <summary>How do we join the Google Meet?</summary>
-      <p>A unique Google Meet link is generated for each session and emailed to both the parent and the student (if a student email is provided) in advance, tied to the time you book on the calendar.</p>
-    </details>
-  </div>
-</section>
-
-<section id="assessment" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
-  <div class="container" style="text-align:center;max-width:620px;">
-    <div style="display:inline-block;background:var(--good-bg);color:#065f46;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:5px 14px;margin-bottom:12px;">100% Free</div>
-    <h2>Take the Placement Test</h2>
-    <p class="lead-muted" style="margin:0 auto 14px;">Before tutoring begins, every student takes a free 30-question readiness assessment. The results tell us exactly where your child is strong and where they need support — and we use them to build a custom tutoring schedule and plan. No obligation, no payment required.</p>
-    <p class="lead-muted" style="margin:0 auto 24px;font-weight:600;color:var(--ink);">Available for students entering grades 6 through 10.</p>
-    <a href="placement.html" class="btn" style="text-decoration:none;display:inline-block;font-size:1.05rem;padding:16px 34px;">Take the Free Placement Test →</a>
-  </div>
-</section>
-
-<section id="register">
-  <div class="container">
-    <div class="register-wrap">
-      <div class="section-label">Get Started</div>
-      <h2>Register for tutoring</h2>
-      <p class="lead-muted">Fill this out to get started. After registration, your child will take a placement assessment and we'll build a custom tutoring plan based on the results. Google Meet links will be sent to both the parent and student email addresses.</p>
-      <form onsubmit="return submitForm(event)">
-        <div>
-          <label for="parent-name">Parent Name</label>
-          <input type="text" id="parent-name" placeholder="Jane Smith" required>
-        </div>
-        <div>
-          <label for="parent-email">Parent Email</label>
-          <input type="email" id="parent-email" placeholder="jane@email.com" required>
-        </div>
-        <div>
-          <label for="student-email">Student Email <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.6">(optional)</span></label>
-          <input type="email" id="student-email" placeholder="student@email.com">
-        </div>
-        <div>
-          <label for="grade-level">Student's Grade Level</label>
-          <select id="grade-level" required>
-            <option value="">Select grade</option>
-            <option value="6">6th Grade</option>
-            <option value="7">7th Grade</option>
-            <option value="8">8th Grade</option>
-            <option value="9">9th Grade</option>
-            <option value="10">10th Grade</option>
-          </select>
-        </div>
-        <div>
-          <label for="subject">Subject</label>
-          <select id="subject" required>
-            <option value="">Select one</option>
-            <option>Middle School Math</option>
-            <option>Pre-Algebra</option>
-            <option>Algebra I</option>
-            <option>Geometry</option>
-            <option>Not sure yet</option>
-          </select>
-        </div>
-        <div class="full">
-          <label for="notes">What is your child working on?</label>
-          <textarea rows="3" id="notes" placeholder="e.g. struggling with factoring quadratics before next week's test"></textarea>
-        </div>
-
-        <div class="full" id="calendar-field">
-          <label id="calendar-label">Select exactly 4 session times</label>
-          <div class="calendar-widget" role="group" aria-labelledby="calendar-label">
-            <div class="cal-header">
-              <button type="button" class="cal-nav" aria-label="Previous month" onclick="changeMonth(-1)">&larr;</button>
-              <span id="cal-month-label"></span>
-              <button type="button" class="cal-nav" aria-label="Next month" onclick="changeMonth(1)">&rarr;</button>
-            </div>
-            <div class="cal-grid" id="cal-daynames"></div>
-            <div class="cal-grid" id="cal-days"></div>
-          </div>
-          <p style="margin:10px 0 0;font-size:.76rem;opacity:.6;">All times are Eastern. Tap a time to add it; tap again to remove it.</p>
-          <div id="availability-status" role="status" aria-live="polite" style="margin-top:8px;font-size:.8rem;color:var(--teal);">Loading availability…</div>
-        </div>
-
-        <div class="full">
-          <label id="sessions-label">Your sessions (<span id="session-count">0</span>/4 selected)</label>
-          <div id="session-list" role="region" aria-labelledby="sessions-label" style="display:flex;flex-direction:column;gap:8px;"></div>
-        </div>
-
-        <div class="full">
-          <label for="form-promo">Discount code (optional)</label>
-          <input type="text" id="form-promo" placeholder="Enter code if you have one">
-        </div>
-
-        <button type="submit" id="submit-btn">Continue to Payment — <span id="pay-now-amount">$130</span> due today</button>
-        <div id="form-msg" role="status" aria-live="polite"></div>
-      </form>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="container">
-    Up And Up Educational Services — Virtual Math Tutoring · Grades 6–10 · Questions? Reach out anytime.
-  </div>
-</footer>
+<div class="footer">
+  <p><strong style="color:var(--teal);">Up And Up Educational Services</strong></p>
+  <p>Virtual tutoring, Monday–Friday 4–7 PM ET · <a href="tel:2405428647">240.542.8647</a></p>
+</div>
 
 <script>
-  /* ================= BACKEND INTEGRATION ================= */
-  const API_BASE = "https://otdyhyzghaohnhtwzkvu.supabase.co/functions/v1";
-  const VALID_TIMES = ["4:00–5:00 PM", "5:00–6:00 PM", "6:00–7:00 PM"];
-  const BOOKING_HORIZON_MONTHS = 3;   // ~90 days, within server 120-day cap
-  const MIN_SESSIONS = 4;
-  const MAX_SESSIONS = 4;
+const API_BASE = "https://otdyhyzghaohnhtwzkvu.supabase.co/functions/v1";
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  let bookedSlots = new Set();      // "YYYY-MM-DD|time"
-  let chosenSessions = [];          // [{date, time}]
-  let availabilityLoaded = false;
+function longDate(iso){
+  const d = new Date(iso + "T12:00:00");
+  return DAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+}
 
-  function setAvailabilityStatus(message, isError){
-    const status = document.getElementById("availability-status");
-    if (!status) return;
-    status.textContent = message;
-    status.style.color = isError ? "#fca5a5" : "var(--teal)";
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const pkgId = params.get("package_id");
+  const mode  = params.get("mode");
+
+  if (mode === "invoice") {
+    document.getElementById("hero-title").textContent = "Slots held — invoice sent!";
+    document.getElementById("hero-sub").textContent =
+      "Your sessions are reserved. Check your email for the invoice with payment details.";
   }
 
-  function easternNowParts(){
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/New_York",
-      year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", hourCycle: "h23"
-    }).formatToParts(new Date());
-    const values = {};
-    parts.forEach(part => { if (part.type !== "literal") values[part.type] = part.value; });
-    return {
-      date: values.year + "-" + values.month + "-" + values.day,
-      hour: Number(values.hour),
-      minute: Number(values.minute)
-    };
+  if (!pkgId) {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("error-state").style.display = "block";
+    return;
   }
 
-  function slotHasStarted(iso, time){
-    const now = easternNowParts();
-    if (iso < now.date) return true;
-    if (iso > now.date) return false;
-    const match = time.match(/^(\d+):/);
-    if (!match) return true;
-    const startHour = Number(match[1]) + 12;
-    return now.hour > startHour || (now.hour === startHour && now.minute >= 0);
-  }
+  try {
+    const res = await fetch(`${API_BASE}/edu-booking-status?package_id=${encodeURIComponent(pkgId)}`);
+    if (!res.ok) throw new Error("status " + res.status);
+    const data = await res.json();
 
-  async function loadAvailability(){
-    availabilityLoaded = false;
-    setAvailabilityStatus("Loading availability…", false);
-    renderCalendar();
-    try {
-      const from = isoOf(today);
-      const to = new Date(today); to.setMonth(to.getMonth() + BOOKING_HORIZON_MONTHS);
-      const toIso = isoOf(to);
-      const res = await fetch(`${API_BASE}/edu-availability?from=${from}&to=${toIso}`);
-      if (!res.ok) throw new Error("Availability request failed with status " + res.status);
-      const data = await res.json();
-      if (!Array.isArray(data.booked)) throw new Error("Availability response was invalid");
-      bookedSlots = new Set(data.booked.map(b => b.session_date + "|" + b.session_time));
-      availabilityLoaded = true;
-      setAvailabilityStatus("", false);
-      renderCalendar();
-    } catch(e){
-      console.error("availability load failed", e);
-      bookedSlots = new Set();
-      availabilityLoaded = false;
-      setAvailabilityStatus("Booking is temporarily unavailable because live availability could not be confirmed. Please refresh and try again.", true);
-      renderCalendar();
-    }
-  }
-
-  function slotTakenCount(iso){
-    let n = 0;
-    for (const t of VALID_TIMES) {
-      if (bookedSlots.has(iso + "|" + t) || chosenSessions.some(s => s.date === iso && s.time === t)) n++;
-    }
-    return n;
-  }
-
-  /* ---------- Calendar ---------- */
-  const initialEasternNow = easternNowParts();
-  const [todayYear, todayMonth, todayDay] = initialEasternNow.date.split("-").map(Number);
-  const today = new Date(todayYear, todayMonth - 1, todayDay);
-  today.setHours(0,0,0,0);
-  let viewYear = today.getFullYear();
-  let viewMonth = today.getMonth();
-
-  const MIN_MONTH_INDEX = today.getFullYear() * 12 + today.getMonth();
-  const _horizon = new Date(today.getFullYear(), today.getMonth() + BOOKING_HORIZON_MONTHS, 1);
-  const MAX_MONTH_INDEX = _horizon.getFullYear() * 12 + _horizon.getMonth();
-
-  const dayNames = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-  const SLOT_LABELS = { "4:00\u20135:00 PM": "4", "5:00\u20136:00 PM": "5", "6:00\u20137:00 PM": "6" };
-  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-  function isoOf(date){
-    return date.getFullYear() + "-" + String(date.getMonth()+1).padStart(2,'0') + "-" + String(date.getDate()).padStart(2,'0');
-  }
-
-  function renderDayNames(){
-    document.getElementById('cal-daynames').innerHTML = dayNames.map(d => "<div>" + d + "</div>").join("");
-  }
-
-  function renderCalendar(){
-    document.getElementById('cal-month-label').textContent = monthNames[viewMonth] + " " + viewYear;
-    const grid = document.getElementById('cal-days');
-    grid.innerHTML = "";
-
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
-    for (let i = 0; i < firstDay; i++) {
-      const blank = document.createElement('div');
-      blank.className = "cal-day blank";
-      grid.appendChild(blank);
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(viewYear, viewMonth, d);
-      const iso = isoOf(date);
-      const dateLabel = date.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" });
-      const dow = date.getDay();
-      const isWeekend = (dow === 0 || dow === 6);
-      const isPast = date < today;
-      const hasFutureSlot = VALID_TIMES.some(t => !slotHasStarted(iso, t));
-      const bookable = availabilityLoaded && !isWeekend && !isPast && hasFutureSlot;
-
-      const cell = document.createElement('div');
-      cell.className = "cal-day" + (bookable ? "" : " disabled noslots");
-
-      const num = document.createElement('div');
-      num.className = "cal-daynum";
-      num.textContent = d;
-      cell.appendChild(num);
-
-      // Times live inside the date box itself - one tap to add.
-      if (bookable) {
-        VALID_TIMES.forEach(function(t){
-          const chip = document.createElement('button');
-          chip.type = "button";
-          const short = SLOT_LABELS[t] || t;
-          const booked = bookedSlots.has(iso + "|" + t);
-          const expired = slotHasStarted(iso, t);
-          const inCart = chosenSessions.some(function(x){ return x.date === iso && x.time === t; });
-
-          if (booked || expired) {
-            chip.className = "cal-slot taken";
-            chip.disabled = true;
-            chip.textContent = short + "p";
-            chip.title = expired ? t + " \u2014 this time has passed" : t + " \u2014 already booked";
-            chip.setAttribute("aria-label", dateLabel + ", " + t + (expired ? ", time has passed" : ", already booked"));
-          } else if (inCart) {
-            chip.className = "cal-slot added";
-            chip.textContent = short + "\u2713";
-            chip.title = t + " \u2014 in your cart, tap to remove";
-            chip.setAttribute("aria-label", "Remove " + dateLabel + ", " + t + " from selected sessions");
-            chip.addEventListener('click', function(){ removeSlot(iso, t); });
-          } else {
-            chip.className = "cal-slot";
-            chip.textContent = short + "p+";
-            chip.title = "Add " + t;
-            chip.setAttribute("aria-label", "Add " + dateLabel + ", " + t + " to selected sessions");
-            chip.addEventListener('click', function(){ addSession(iso, t); });
-          }
-          cell.appendChild(chip);
-        });
-      }
-
-      grid.appendChild(cell);
-    }
-
-    const curIndex = viewYear * 12 + viewMonth;
-    document.querySelectorAll('.cal-nav')[0].disabled = (curIndex <= MIN_MONTH_INDEX);
-    document.querySelectorAll('.cal-nav')[1].disabled = (curIndex >= MAX_MONTH_INDEX);
-  }
-
-  function changeMonth(delta){
-    viewMonth += delta;
-    if(viewMonth < 0){ viewMonth = 11; viewYear -= 1; }
-    if(viewMonth > 11){ viewMonth = 0; viewYear += 1; }
-    renderCalendar();
-  }
-
-  function removeSlot(iso, time){
-    const i = chosenSessions.findIndex(function(x){ return x.date === iso && x.time === time; });
-    if (i >= 0) removeSession(i);
-  }
-
-  /* ---------- Session list ---------- */
-  function addSession(date, time){
-    const msg = document.getElementById('form-msg');
-    msg.textContent = "";
-    if (!date || !time) return;
-    if (!availabilityLoaded) { msg.textContent = "Live availability could not be confirmed. Please refresh and try again."; return; }
-    if (slotHasStarted(date, time)) { msg.textContent = "That session time has already passed."; return; }
-    if (chosenSessions.length >= MAX_SESSIONS) { msg.textContent = "You have selected all 4 sessions. Remove one before choosing another."; return; }
-    if (bookedSlots.has(date + "|" + time)) { msg.textContent = "That slot is already booked."; return; }
-    if (chosenSessions.some(s => s.date === date && s.time === time)) return;
-
-    chosenSessions.push({ date: date, time: time });
-    chosenSessions.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
-    refreshAll();
-  }
-
-  function removeSession(i){
-    chosenSessions.splice(i, 1);
-    refreshAll();
-  }
-
-  function refreshAll(){
-    renderSessionList();
-    renderCalendar();
-    refreshPricing();
-  }
-
-  function renderSessionList(){
-    const list = document.getElementById('session-list');
-    document.getElementById('session-count').textContent = chosenSessions.length;
-    if (chosenSessions.length === 0) {
-      list.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:0.88rem;">Cart is empty — tap + next to a time to add it.</div>';
-      return;
-    }
-    list.innerHTML = chosenSessions.map((s, i) => {
-      const d = new Date(s.date + "T12:00:00");
-      const label = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-      return `<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;font-size:0.9rem;">
-        <span>Session ${i+1} — ${label}, ${s.time}</span>
-        <button type="button" aria-label="Remove session ${i+1}: ${label}, ${s.time}" onclick="removeSession(${i})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:1rem;">✕</button>
-      </div>`;
+    // Hero date chips
+    const heroDates = document.getElementById("hero-dates");
+    heroDates.innerHTML = (data.sessions || []).map(function(s){
+      return '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 16px;">' +
+        '<span style="font-size:1.1rem;">📅</span>' +
+        '<div>' +
+          '<div style="color:#fff;font-weight:600;font-size:0.9rem;">' + longDate(s.session_date) + '</div>' +
+          '<div style="color:rgba(255,255,255,0.6);font-size:0.82rem;">' + s.session_time + ' ET — Session ' + s.session_number + '</div>' +
+        '</div>' +
+      '</div>';
     }).join("");
+
+    // Sessions
+    const list = document.getElementById("sessions-list");
+    list.innerHTML = (data.sessions || []).map(function(s){
+      const meetHtml = s.meet_link
+        ? '<a href="' + s.meet_link + '" target="_blank" class="meet-btn">Join Meet ↗</a>'
+        : '<span class="pending">Link coming soon</span>';
+      return '<div class="session-row"><div><div class="num">Session ' + s.session_number + '</div>' +
+        '<div class="date">' + longDate(s.session_date) + ' · ' + s.session_time + ' ET</div></div>' +
+        meetHtml + '</div>';
+    }).join("");
+
+    // Billing
+    const billing = document.getElementById("billing-info");
+    billing.innerHTML = (data.installments || []).map(function(i){
+      const cls = i.status === "paid" ? "paid" : "upcoming";
+      const label = i.status === "paid" ? "Paid" : i.status === "invoiced" ? "Invoiced" : "After session " + i.trigger_after_session;
+      return '<div class="billing-row"><span class="label">Sessions ' + i.session_numbers.join(" & ") +
+        '</span><span class="val">' + '$' + Number(i.amount).toFixed(2) +
+        '</span><span class="' + cls + '">' + label + '</span></div>';
+    }).join("");
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("details").style.display = "block";
+  } catch(e){
+    console.error("Failed to load booking:", e);
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("error-state").style.display = "block";
   }
+}
 
-  /* ---------- Pricing display ---------- */
-  const SESSION_PRICE = 65;
-  const SESSIONS = 4;
-  const DISCOUNTED_PRICE = 60;
-  const DISCOUNT_CODE = "FAMILY15";
-
-  let currentPerSession = SESSION_PRICE;
-
-  /* The deployed backend currently supports one four-session package. */
-  function billableCount(){
-    return MIN_SESSIONS;
-  }
-
-  function setAmounts(perSession){
-    const n = billableCount();
-    const total = Math.round(perSession * n * 100) / 100;
-    // Only the first two sessions are due at booking; the rest bills as you go.
-    const dueToday = Math.round(perSession * Math.min(2, n) * 100) / 100;
-    const blocks = Math.ceil(n / 2);
-    const totalDisplay = document.getElementById('total-display');
-    const p1 = document.getElementById('payment1-display');
-    const p2 = document.getElementById('payment2-display');
-    if (totalDisplay) totalDisplay.textContent = "$" + total + " over " + blocks + " payment" + (blocks === 1 ? "" : "s");
-    if (p1) p1.textContent = "$" + dueToday;
-    if (p2) p2.textContent = (blocks > 1 ? "\u00d7 " + (blocks - 1) + " more" : "\u2014");
-    const payNow = document.getElementById('pay-now-amount');
-    if (payNow) payNow.textContent = "$" + dueToday;
-  }
-
-  function refreshPricing(){
-    setAmounts(currentPerSession);
-  }
-
-  function applyPromo(){
-    const input = document.getElementById('promo-input').value.trim().toUpperCase();
-    const msg = document.getElementById('promo-msg');
-    const priceDisplay = document.getElementById('price-display');
-    const wasPrice = document.getElementById('was-price');
-
-    if(input === DISCOUNT_CODE){
-      priceDisplay.textContent = "$" + DISCOUNTED_PRICE;
-      wasPrice.style.display = "inline";
-      currentPerSession = DISCOUNTED_PRICE;
-      setAmounts(DISCOUNTED_PRICE);
-      document.getElementById('form-promo').value = input;
-      msg.textContent = "Code applied — $" + DISCOUNTED_PRICE + "/session locked in.";
-      msg.className = "ok";
-    } else if(input.length === 0){
-      msg.textContent = "Enter a code to apply.";
-      msg.className = "bad";
-    } else {
-      priceDisplay.textContent = "$" + SESSION_PRICE;
-      wasPrice.style.display = "none";
-      currentPerSession = SESSION_PRICE;
-      setAmounts(SESSION_PRICE);
-      msg.textContent = "That code isn't valid.";
-      msg.className = "bad";
-    }
-  }
-
-  /* ---------- Submit → create package → PayPal ---------- */
-  async function submitForm(e){
-    if (e && e.preventDefault) e.preventDefault();
-    const msg = document.getElementById('form-msg');
-    const btn = document.getElementById('submit-btn');
-    msg.textContent = "";
-
-    if (!availabilityLoaded) {
-      msg.textContent = "Live availability could not be confirmed. Please refresh and try again.";
-      return false;
-    }
-    if (chosenSessions.length !== MIN_SESSIONS) {
-      msg.textContent = `Please select exactly ${MIN_SESSIONS} sessions (${chosenSessions.length}/${MIN_SESSIONS} selected).`;
-      return false;
-    }
-    if (chosenSessions.some(s => slotHasStarted(s.date, s.time))) {
-      msg.textContent = "One of your selected session times has already passed. Please choose another time.";
-      refreshAll();
-      return false;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Setting up your booking…";
-
-    const pageUrl = window.location.origin + window.location.pathname;
-
-    try {
-      const res = await fetch(`${API_BASE}/edu-create-package`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          parent_name: document.getElementById('parent-name').value,
-          parent_email: document.getElementById('parent-email').value,
-          student_email: document.getElementById('student-email').value || null,
-          student_grade: document.getElementById('grade-level').value,
-          subject: document.getElementById('subject').value,
-          notes: document.getElementById('notes').value,
-          discount_code: document.getElementById('form-promo').value,
-          payment_method: "paypal",
-          sessions: chosenSessions,
-          return_url: pageUrl + "?paypal=return",
-          cancel_url: pageUrl + "?paypal=cancel",
-        }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.conflicts) {
-          msg.textContent = "Some of your slots were just booked by someone else. Please choose different times.";
-          await loadAvailability();
-        } else {
-          msg.textContent = data.error || "Something went wrong. Please try again.";
-        }
-        btn.disabled = false;
-        btn.innerHTML = 'Continue to Payment — <span id="pay-now-amount">$' + (data.payment1_amount ?? 130) + '</span> due today';
-        return false;
-      }
-
-      if (data.mode === "comped") {
-        msg.className = "ok";
-        msg.textContent = "Booking confirmed at no charge. Confirmation email triggered.";
-        btn.style.display = "none";
-        await loadAvailability();
-      } else if (data.approveUrl) {
-        msg.textContent = "Redirecting you to PayPal to complete Payment 1…";
-        window.location.href = data.approveUrl;
-      } else {
-        msg.textContent = "Booking created but no payment link was returned. Please contact us.";
-        btn.disabled = false;
-      }
-    } catch (err) {
-      console.error(err);
-      msg.textContent = "Network error — please check your connection and try again.";
-      btn.disabled = false;
-      btn.textContent = "Continue to Payment — $130 due today";
-    }
-    return false;
-  }
-
-  /* ---------- Handle return from PayPal ---------- */
-  async function handlePayPalReturn(){
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("paypal") !== "return") return;
-    const orderId = params.get("token");
-    if (!orderId) return;
-
-    const banner = document.createElement("div");
-    banner.style.cssText = "position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:100;background:#0d1526;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:18px 26px;box-shadow:0 20px 50px -20px rgba(0,0,0,0.5);max-width:90%;text-align:center;font-size:0.95rem;";
-    banner.textContent = "Finalizing your payment…";
-    document.body.appendChild(banner);
-
-    try {
-      const res = await fetch(`${API_BASE}/edu-capture-payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order_id: orderId }),
-      });
-      const data = await res.json();
-      if (res.ok && (data.status === "captured" || data.status === "already_captured")) {
-        banner.innerHTML = "✅ <strong>Payment received — you're booked!</strong><br>Sessions 1 & 2 are confirmed and calendar invites with Google Meet links are on the way. Your next $130 is charged after session 2, for sessions 3 & 4.";
-        banner.style.borderColor = "#2dd4bf";
-      } else {
-        banner.textContent = "We couldn't confirm your payment automatically. If you completed payment on PayPal, don't worry — we'll reconcile it and email you. " + (data.error || "");
-      }
-    } catch {
-      banner.textContent = "We couldn't confirm your payment automatically. If you completed payment on PayPal, we'll reconcile it and email you.";
-    }
-
-    window.history.replaceState({}, "", window.location.pathname);
-    setTimeout(() => banner.remove(), 15000);
-  }
-
-  renderDayNames();
-  renderCalendar();
-  renderSessionList();
-  refreshPricing();
-  loadAvailability();
-  handlePayPalReturn();
+init();
 </script>
-
 </body>
 </html>
