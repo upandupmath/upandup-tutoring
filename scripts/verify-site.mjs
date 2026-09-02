@@ -167,9 +167,10 @@ assertContains(gitignore, "data.sql", "production data dump output is ignored");
 
 const index = read("index.html");
 assertContains(index, "const MIN_SESSIONS = 4;", "booking retains the four-session minimum");
-assertContains(index, "const MAX_SESSIONS = 12;", "booking is capped at twelve sessions");
+assertContains(index, "const MAX_SESSIONS = 8;", "booking is capped at eight sessions");
 assertContains(index, "chosenSessions.length % 2 !== 0", "booking requires complete two-session billing blocks");
-assertContains(index, "Choose 4–12 sessions in even two-session blocks", "pricing copy matches the booking policy");
+assertContains(index, "Select 4–8 session times in even two-session blocks", "booking copy matches the 4–8 session policy");
+assertContains(index, "Choose 4, 6, or 8 sessions", "pricing copy matches the 4–8 session policy");
 assertContains(
   index,
   "Booking is temporarily unavailable because live availability could not be confirmed.",
