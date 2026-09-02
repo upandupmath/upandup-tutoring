@@ -496,7 +496,7 @@
   <div class="container">
     <div class="section-label">Pricing</div>
     <h2>Simple, one-rate pricing.</h2>
-    <p class="lead-muted">No tiers to compare. Book one four-session package and pay two sessions at a time — never more than two sessions in advance. Handled through PayPal, and we accept all major credit cards.</p>
+    <p class="lead-muted">Choose 4–8 sessions in even two-session blocks and pay two sessions at a time — never more than two sessions in advance. Handled through PayPal, and we accept all major credit cards.</p>
 
     <div class="pricing-card">
       <div class="price-row">
@@ -505,7 +505,7 @@
         <span class="price-was" id="was-price" style="display:none;">$65</span>
       </div>
       <ul>
-        <li>Four-session package — select exactly four session times</li>
+        <li>Choose 4, 6, or 8 sessions</li>
         <li>60-minute 1-on-1 sessions, 100% virtual on Google Meet</li>
         <li>Monday–Friday, 4:00–7:00 PM — calendar booking synced automatically</li>
         <li>Grades 6–10 · middle school math through Geometry</li>
@@ -545,7 +545,7 @@
     <div class="policy-grid">
       <div class="policy-card">
         <h3>The 4-session minimum &amp; how billing works</h3>
-        <p>Every sign-up books exactly four sessions — enough runway to make meaningful progress without paying for the full package up front. You pay $130 for sessions 1 and 2 when you book. The remaining $130 covers sessions 3 and 4 and is charged according to the payment authorization completed through PayPal.</p>
+        <p>Every sign-up starts with at least four sessions. You may choose 4, 6, or 8 sessions, and each $130 installment covers the next two sessions at the standard rate. The first installment is paid when you book; later installments are charged as you progress.</p>
       </div>
       <div class="policy-card">
         <h3>Rescheduling</h3>
@@ -577,7 +577,7 @@
     </details>
     <details>
       <summary>How does payment work?</summary>
-      <p>The four-session package is paid in two parts. $130 covers sessions 1 and 2 and is paid when you book. The remaining $130 covers sessions 3 and 4 and is charged using the payment authorization completed through PayPal. Visa, Mastercard, Amex and Discover are accepted; no PayPal account is required.</p>
+      <p>Choose 4, 6, or 8 sessions. The first $130 covers sessions 1 and 2 and is paid when you book. Each later $130 installment covers the next two sessions and is charged using the payment authorization completed through PayPal. Visa, Mastercard, Amex and Discover are accepted; no PayPal account is required.</p>
     </details>
     <details>
       <summary>How do we join the Google Meet?</summary>
@@ -643,7 +643,7 @@
         </div>
 
         <div class="full" id="calendar-field">
-          <label id="calendar-label">Select exactly 4 session times</label>
+          <label id="calendar-label">Select 4–8 session times in even two-session blocks</label>
           <div class="calendar-widget" role="group" aria-labelledby="calendar-label">
             <div class="cal-header">
               <button type="button" class="cal-nav" aria-label="Previous month" onclick="changeMonth(-1)">&larr;</button>
@@ -658,7 +658,7 @@
         </div>
 
         <div class="full">
-          <label id="sessions-label">Your sessions (<span id="session-count">0</span>/4 selected)</label>
+          <label id="sessions-label">Your sessions (<span id="session-count">0</span>/8 selected · minimum 4)</label>
           <div id="session-list" role="region" aria-labelledby="sessions-label" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
@@ -687,7 +687,7 @@
   const VALID_TIMES = ["4:00–5:00 PM", "5:00–6:00 PM", "6:00–7:00 PM"];
   const BOOKING_HORIZON_MONTHS = 3;   // ~90 days, within server 120-day cap
   const MIN_SESSIONS = 4;
-  const MAX_SESSIONS = 4;
+  const MAX_SESSIONS = 8;
 
   let bookedSlots = new Set();      // "YYYY-MM-DD|time"
   let chosenSessions = [];          // [{date, time}]
@@ -874,7 +874,7 @@
     if (!date || !time) return;
     if (!availabilityLoaded) { msg.textContent = "Live availability could not be confirmed. Please refresh and try again."; return; }
     if (slotHasStarted(date, time)) { msg.textContent = "That session time has already passed."; return; }
-    if (chosenSessions.length >= MAX_SESSIONS) { msg.textContent = "You have selected all 4 sessions. Remove one before choosing another."; return; }
+    if (chosenSessions.length >= MAX_SESSIONS) { msg.textContent = "You have selected the maximum of 8 sessions. Remove one before choosing another."; return; }
     if (bookedSlots.has(date + "|" + time)) { msg.textContent = "That slot is already booked."; return; }
     if (chosenSessions.some(s => s.date === date && s.time === time)) return;
 
@@ -913,15 +913,18 @@
 
   /* ---------- Pricing display ---------- */
   const SESSION_PRICE = 65;
-  const SESSIONS = 4;
   const DISCOUNTED_PRICE = 60;
   const DISCOUNT_CODE = "FAMILY15";
 
   let currentPerSession = SESSION_PRICE;
 
-  /* The deployed backend currently supports one four-session package. */
+  /* Preview the minimum package until four sessions are selected. While the
+     parent is between valid two-session blocks, preview the next even block. */
   function billableCount(){
-    return MIN_SESSIONS;
+    const selected = chosenSessions.length;
+    if (selected <= MIN_SESSIONS) return MIN_SESSIONS;
+    if (selected % 2 === 0) return selected;
+    return Math.min(selected + 1, MAX_SESSIONS);
   }
 
   function setAmounts(perSession){
@@ -982,8 +985,16 @@
       msg.textContent = "Live availability could not be confirmed. Please refresh and try again.";
       return false;
     }
-    if (chosenSessions.length !== MIN_SESSIONS) {
-      msg.textContent = `Please select exactly ${MIN_SESSIONS} sessions (${chosenSessions.length}/${MIN_SESSIONS} selected).`;
+    if (chosenSessions.length < MIN_SESSIONS) {
+      msg.textContent = `Please select at least ${MIN_SESSIONS} sessions (${chosenSessions.length}/${MIN_SESSIONS} minimum selected).`;
+      return false;
+    }
+    if (chosenSessions.length > MAX_SESSIONS) {
+      msg.textContent = `Please select no more than ${MAX_SESSIONS} sessions.`;
+      return false;
+    }
+    if (chosenSessions.length % 2 !== 0) {
+      msg.textContent = "Please select one more session so your package contains complete two-session billing blocks.";
       return false;
     }
     if (chosenSessions.some(s => slotHasStarted(s.date, s.time))) {
