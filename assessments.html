@@ -104,7 +104,8 @@ input:focus{outline:3px solid rgba(14,159,110,.35);border-color:var(--accent)}
 .footer-note{text-align:center;color:rgba(255,255,255,.5);font-size:.75rem;font-weight:600;margin-top:18px;letter-spacing:.04em}
 /* grade picker */
 .grade-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}
-.grade-card{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;transition:border-color .1s,transform .1s;text-align:center}
+.grade-card{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;transition:border-color .1s,transform .1s;text-align:center;font:inherit;color:inherit;-webkit-appearance:none;appearance:none;width:100%}
+.grade-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-color:var(--accent);transform:translateY(-2px)}
 .grade-card:hover{border-color:var(--accent);transform:translateY(-2px)}
 .grade-card .g-num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.8rem;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .grade-card .g-label{font-size:.82rem;font-weight:700;color:var(--muted);margin-top:4px}
@@ -462,11 +463,11 @@ function gradePickerScreen(){
     <p class="lede">Each assessment covers the prerequisite skills needed for that grade level. Results include a detailed strengths and weaknesses report with a recommended tutoring plan.</p>
     <div class="grade-grid">
       ${[6,7,8,9,10,11].map(g=>`
-        <div class="grade-card" data-g="${g}">
+        <button type="button" class="grade-card" data-g="${g}" aria-label="${g}th Grade Readiness Assessment">
           <div class="g-num">${g}th</div>
           <div class="g-label">Grade Readiness</div>
           <div class="g-sub">Tests ${BANKS[g].tests}</div>
-        </div>`).join("")}
+        </button>`).join("")}
     </div>
   `;
   screen.querySelectorAll(".grade-card").forEach(c=>{
