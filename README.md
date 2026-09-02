@@ -1,59 +1,49 @@
-# Up and Up Educational Services — Tutoring Site
+# Up And Up Educational Services — Virtual Math Tutoring
 
-Public GitHub Pages site for virtual math tutoring, placement tests, and instructor-led student assessments.
+Live at **[upandupmath.github.io/upandup-tutoring](https://upandupmath.github.io/upandup-tutoring/)**
 
-## Production status
+## What this is
 
-The public frontend is live at:
+A booking and tutoring platform for virtual math tutoring, grades 6–10. Parents book 4-session packages, pay through PayPal, and receive Google Calendar invites with Meet links for each session.
 
-https://upandupmath.github.io/upandup-tutoring/
+## Pages
 
-The pages call a Supabase project for booking availability and package creation, and use separate report-delivery integrations for assessment results.
+| Page | Purpose |
+|---|---|
+| `index.html` | Main site — about, pricing, FAQ, policies, booking form |
+| `placement.html` | Free 30-question placement test (6 grade levels, 5 questions each) |
+| `assessments.html` | Teacher-facing student assessment tool |
+| `confirmed.html` | Post-booking confirmation with dates, Meet links, billing schedule |
+| `privacy.html` | COPPA-aligned privacy policy |
 
-### Recovery warning
+## Backend
 
-As of the August 31, 2026 repository audit, the backend code and database migrations described by the previous README were **not present on `main`**. In particular, `supabase/functions/` did not exist even though the README called it a reference copy of the deployed code.
+Supabase edge functions handle booking, payments, email, and calendar integration. The private backend repository contains the deployed source and database schema.
 
-Treat the currently deployed Supabase project as the only known copy of the production backend until its functions, schema, schedules, and configuration names have been exported and reconciled. Do not redeploy payment functions, rotate payment configuration, or accept a new payment integration based only on this repository.
+### Key systems
+- **Booking:** 4-session packages, exactly $65/session, billed $130 at a time
+- **Payments:** PayPal with vault for automatic second installment, plus invoice option for Zelle/Cash App
+- **Calendar:** Google Calendar events with Meet links auto-generated on session confirmation
+- **Email:** Tutoring-branded transactional emails (confirmation, invoice, receipt, cancellation)
+- **Availability:** Syncs with personal Google Calendar and blocks DCPS 2026-27 school-off days
+- **Safety nets:** Payment reconciler (5 min), abandoned checkout sweep (15 min), non-payment enforcement (daily)
 
-Follow [the production recovery runbook](docs/production-recovery.md) before any backend or payment cutover.
+### Edge functions
+`edu-create-package` · `edu-capture-payment` · `edu-charge-installments` · `edu-availability` · `edu-booking-status` · `edu-notify-email` · `edu-save-placement` · `edu-create-calendar` · `edu-sync-calendar` · `edu-reconcile-payments` · `edu-check-assessment`
 
-## Frontend pages
+### Cron jobs (pg_cron)
+| Job | Schedule | Purpose |
+|---|---|---|
+| `edu-charge-installments-daily` | `0 12 * * *` | Charges due installments |
+| `edu-reconcile-payments` | `*/5 * * * *` | Catches PayPal payments missed by browser |
+| `edu-expire-abandoned-bookings` | `*/15 * * * *` | Releases slots from abandoned checkouts |
+| `edu-enforce-nonpayment` | `30 12 * * *` | Cancels packages with missed payments |
+| `edu-sync-calendar-hourly` | `15 * * * *` | Syncs personal calendar conflicts |
 
-- `index.html` — marketing, availability, registration, and checkout entry
-- `placement.html` — public parent-consented placement assessment
-- `assessments.html` — instructor-code assessment page
-- `teaching.jpg` — tutor photo used by the homepage
+## Development
 
-## Verification
+The public repository hosts the GitHub Pages frontend. Backend source lives in a separate private repository. Branch protection requires pull requests for `main`.
 
-Pull requests and pushes to `main` run a dependency-free verifier:
+## Contact
 
-```sh
-node scripts/verify-site.mjs
-```
-
-It checks inline JavaScript syntax, local links, common committed credential patterns, the four-session booking cap, fail-closed availability behavior, and privacy/security invariants.
-
-## Publishing the frontend
-
-GitHub Pages publishes `main` from the repository root. Frontend changes should go through a pull request and pass the Verify site workflow before merge.
-
-There is no frontend build step.
-
-## Pricing and payment changes
-
-Displayed prices in `index.html` and server-side prices in Supabase must match, but the server is the authority. Before changing either:
-
-1. export the deployed functions and database schema
-2. back up production data outside this public repository
-3. verify the current payment provider and environment
-4. test the complete flow in a non-production environment
-5. reconcile successful payment, duplicate callback, decline, cancellation, and retry cases
-6. use a reviewed pull request for the frontend change
-
-Never put payment secrets, service-role keys, database connection strings, access codes, or report endpoints in GitHub Pages or committed files.
-
-## Current work
-
-The Stripe migration is staged separately in [draft PR #2](https://github.com/upandupmath/upandup-tutoring/pull/2). It is not deployed or approved for merge until the account and backend setup checklist is complete.
+Brother Truth · [240.542.8647](tel:2405428647) · [theuauchessclub@gmail.com](mailto:theuauchessclub@gmail.com)
