@@ -4,7 +4,7 @@ Live at **[upandupmath.github.io/upandup-tutoring](https://upandupmath.github.io
 
 ## What this is
 
-A booking and tutoring platform for virtual math tutoring, grades 6–10. Parents book 4-session packages, pay through PayPal, and receive Google Calendar invites with Meet links for each session.
+A booking and tutoring platform for virtual math tutoring, grades 6–10. Parents choose 4, 6, or 8 sessions, pay through PayPal, and receive Google Calendar invites with Meet links for each session.
 
 ## Pages
 
@@ -21,7 +21,7 @@ A booking and tutoring platform for virtual math tutoring, grades 6–10. Parent
 Supabase edge functions handle booking, payments, email, and calendar integration. The private backend repository contains the deployed source and database schema.
 
 ### Key systems
-- **Booking:** 4-session packages, exactly $65/session, billed $130 at a time
+- **Booking:** 4–8 sessions in even two-session blocks, $65/session, billed $130 at a time
 - **Payments:** PayPal with vault for automatic second installment, plus invoice option for Zelle/Cash App
 - **Calendar:** Google Calendar events with Meet links auto-generated on session confirmation
 - **Email:** Tutoring-branded transactional emails (confirmation, invoice, receipt, cancellation)
