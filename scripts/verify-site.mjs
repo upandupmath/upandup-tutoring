@@ -198,10 +198,11 @@ assertContains(assessments, "function escapeHtml", "assessment result names are 
 assertContains(assessments, "30-question", "assessment question count is displayed accurately");
 assertNotContains(assessments, "${state.name}", "assessment results do not interpolate an unescaped student name");
 assertContains(assessments, 'aria-labelledby="question-text"', "assessment answer group is tied to its question");
-
-if (assessments.includes('const PASS = "UpAndUp2026";')) {
-  warn("assessments.html still uses the known static access-code gate; backend authentication is the next security chunk");
-}
+assertNotContains(assessments, "script.google.com/macros", "assessment report endpoint is absent from public source");
+assertContains(assessments, "requestTeacherLink", "assessment requests a teacher email sign-in link");
+assertContains(assessments, "ASSESSMENT_SESSION_KEY", "assessment keeps access tokens in session storage only");
+assertContains(assessments, 'Authorization":`Bearer ${assessmentToken}`', "assessment report requests require teacher authorization");
+assertNotContains(assessments, "authed=true;\n  gradePickerScreen();", "assessment does not bypass teacher login");
 
 const confirmed = read("confirmed.html");
 assertContains(confirmed, 'name="robots" content="noindex,nofollow"', "confirmation page is excluded from search indexing");
